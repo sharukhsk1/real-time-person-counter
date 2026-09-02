@@ -1,0 +1,19 @@
+# People Counter - Production Grade Requirements
+# ================================================
+
+# Core Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Computer Vision
+ultralytics>=8.0.200
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# Utilities
+jinja2>=3.1.0
+aiofiles>=23.0.0
+
+# Optional: For better performance
+# onnxruntime-gpu>=1.16.0  # Uncomment for GPU inference acceleration

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111d">
+<title>Vision Counter · Mobile Camera</title>
+<style>
+:root{--bg:#08111d;--panel:#101b2a;--border:#26394f;--text:#edf5ff;--muted:#9aa9bb;--cyan:#2dd4e7;--green:#36e39a;--red:#ff637e}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+.app{min-height:100svh;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));gap:14px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:800;font-size:18px;letter-spacing:-.3px}.brand b{color:var(--cyan)}.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}.dot{width:9px;height:9px;border-radius:50%;background:#65758a;display:inline-block}.dot.on{background:var(--green);box-shadow:0 0 12px rgba(54,227,154,.8)}.dot.err{background:var(--red)}
+.camera{position:relative;flex:1;min-height:330px;border-radius:20px;overflow:hidden;background:#020407;border:1px solid var(--border);box-shadow:0 14px 45px rgba(0,0,0,.28)}.camera video{width:100%;height:100%;object-fit:cover}.camera.front video{transform:scaleX(-1)}
+.badge{position:absolute;z-index:2;top:12px;left:12px;background:rgba(4,10,16,.72);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.13);padding:7px 10px;border-radius:999px;font-size:10px;letter-spacing:1.2px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:14px;padding:16px 10px;font-size:15px;font-weight:800;min-height:54px}.primary{background:linear-gradient(135deg,#2dd4e7,#2589ee);color:#06121d}.secondary{background:#172334;border:1px solid #30435a;color:var(--text)}.hint{text-align:center;color:var(--muted);font-size:12px;line-height:1.55;padding:0 8px 4px}.hint.error{color:#ffb0bd}.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="brand">Vision <b>Counter</b> · Camera</div>
+    <div class="status"><span id="dot" class="dot"></span><span id="status">Preparing camera</span></div>
+  </div>
+
+  <div id="cameraBox" class="camera">
+    <div class="badge">LIVE MOBILE CAMERA</div>
+    <video id="video" autoplay playsinline muted></video>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn" class="btn primary">▶ Enable Camera</button>
+    <button id="flipBtn" class="btn secondary">🔄 Flip Camera</button>
+  </div>
+
+  <div class="hint" id="hint">Your device camera is detected automatically. Rear camera is preferred by default.</div>
+</div>
+
+<script>
+const video=document.getElementById('video');
+const startBtn=document.getElementById('startBtn');
+const flipBtn=document.getElementById('flipBtn');
+const statusEl=document.getElementById('status');
+const dot=document.getElementById('dot');
+const hint=document.getElementById('hint');
+const cameraBox=document.getElementById('cameraBox');
+
+let stream=null, ws=null, timer=null;
+let facing='environment'; // Prefer rear camera on phones.
+let canvas=document.createElement('canvas');
+let ctx=canvas.getContext('2d', {alpha:false});
+
+function setStatus(text,state='idle'){
+  statusEl.textContent=text;
+  dot.className='dot'+(state==='on'?' on':state==='error'?' err':'');
+  hint.classList.toggle('error',state==='error');
+}
+function wsUrl(){
+  return (location.protocol==='https:'?'wss://':'ws://') + location.host + '/phone-stream';
+}
+function isCameraAvailable(){
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+}
+function isSecureForCamera(){
+  return window.isSecureContext || location.hostname==='localhost';
+}
+
+async function openCamera(){
+  if(!isCameraAvailable()) throw new Error('Camera API is not available in this browser.');
+
+  if(stream){
+    stream.getTracks().forEach(track=>track.stop());
+    stream=null;
+  }
+
+  setStatus('Requesting camera permission');
+
+  const preferred={
+    video:{
+      facingMode:{ideal:facing},
+      width:{ideal:1280,max:1920},
+      height:{ideal:720,max:1080}
+    },
+    audio:false
+  };
+
+  try{
+    stream=await navigator.mediaDevices.getUserMedia(preferred);
+  }catch(err){
+    // Desktop webcams may not expose facingMode. Graceful fallback.
+    if(facing==='environment'){
+      stream=await navigator.mediaDevices.getUserMedia({
+        video:{width:{ideal:1280},height:{ideal:720}},
+        audio:false
+      });
+    }else{
+      throw err;
+    }
+  }
+
+  video.srcObject=stream;
+  await video.play();
+
+  const settings=stream.getVideoTracks()[0].getSettings();
+  if(settings.facingMode) facing=settings.facingMode;
+
+  cameraBox.classList.toggle('front',facing==='user');
+  setStatus('Camera ready','on');
+  startBtn.textContent='■ Stop Camera';
+}
+
+function connectStream(){
+  return new Promise((resolve,reject)=>{
+    ws=new WebSocket(wsUrl());
+    ws.binaryType='arraybuffer';
+
+    ws.onopen=()=>{
+      setStatus('Live stream connected','on');
+      resolve();
+    };
+    ws.onerror=()=>reject(new Error('Could not connect the camera stream.'));
+    ws.onclose=()=>{
+      if(stream) setStatus('Stream connection closed','error');
+    };
+  });
+}
+
+function sendFrame(){
+  if(!stream || !ws || ws.readyState!==WebSocket.OPEN || video.readyState<2) return;
+  if(!video.videoWidth || !video.videoHeight) return;
+  if(ws.bufferedAmount>750000) return;
+
+  const maxWidth=640;
+  const scale=Math.min(1,maxWidth/video.videoWidth);
+  canvas.width=Math.max(2,Math.round(video.videoWidth*scale));
+  canvas.height=Math.max(2,Math.round(video.videoHeight*scale));
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+  canvas.toBlob(blob=>{
+    if(blob && ws && ws.readyState===WebSocket.OPEN && ws.bufferedAmount<750000){
+      ws.send(blob);
+    }
+  },'image/jpeg',0.72);
+}
+
+async function start(){
+  try{
+    if(!isSecureForCamera()){
+      throw new Error('Camera access requires a secure HTTPS deployment. Please open the official deployed project link.');
+    }
+
+    await openCamera();
+    await connectStream();
+
+    clearInterval(timer);
+    timer=setInterval(sendFrame,80);
+    hint.textContent=(facing==='environment'
+      ?'Rear camera is active and streaming to Vision Counter.'
+      :'Front camera is active and streaming to Vision Counter.');
+  }catch(err){
+    console.error(err);
+    setStatus('Camera permission unavailable','error');
+
+    if(err.name==='NotAllowedError'){
+      hint.textContent='Camera permission was denied. Allow Camera access in your browser settings, then tap Enable Camera.';
+    }else if(err.name==='NotFoundError'){
+      hint.textContent='No compatible camera was found on this device.';
+    }else{
+      hint.textContent=err.message || 'Unable to start the camera. Please try again.';
+    }
+
+    startBtn.textContent='▶ Enable Camera';
+  }
+}
+
+function stop(){
+  clearInterval(timer); timer=null;
+  if(ws){
+    try{ws.send(JSON.stringify({action:'stop'}));}catch(e){}
+    try{ws.close();}catch(e){}
+    ws=null;
+  }
+  if(stream){
+    stream.getTracks().forEach(track=>track.stop());
+    stream=null;
+  }
+  video.srcObject=null;
+  setStatus('Camera stopped');
+  hint.textContent='Tap Enable Camera to start streaming again.';
+  startBtn.textContent='▶ Enable Camera';
+}
+
+startBtn.addEventListener('click',()=>stream?stop():start());
+
+flipBtn.addEventListener('click',async()=>{
+  facing=facing==='environment'?'user':'environment';
+  if(stream){
+    try{
+      await openCamera();
+      hint.textContent=(facing==='environment'?'Rear':'Front')+' camera active. Streaming continues.';
+    }catch(err){
+      console.error(err);
+      setStatus('Could not switch camera','error');
+      hint.textContent='Unable to switch camera on this device.';
+    }
+  }else{
+    hint.textContent=(facing==='environment'?'Rear':'Front')+' camera selected. Tap Enable Camera.';
+  }
+});
+
+/*
+  Auto-detect behavior:
+  - On mobile: opening the project URL routes here and requests the device camera.
+  - On desktop: the main dashboard remains on the webcam workflow.
+  - Browser permission policies can still require user approval.
+*/
+window.addEventListener('load',()=>{
+  if(isSecureForCamera() && isCameraAvailable()){
+    start(); // Automatically request the device camera; button remains as fallback.
+  }else if(!isSecureForCamera()){
+    setStatus('Secure connection required','error');
+    hint.textContent='Use the deployed HTTPS project link to access the phone camera.';
+  }else{
+    setStatus('Camera unavailable','error');
+    hint.textContent='This browser does not provide camera access.';
+  }
+});
+
+window.addEventListener('beforeunload',stop);
+</script>
+</body>
+</html>
