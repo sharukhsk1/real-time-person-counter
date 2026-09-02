@@ -2,230 +2,2329 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+
 <meta name="theme-color" content="#08111d">
+
 <title>Vision Counter · Mobile Camera</title>
+
 <style>
-:root{--bg:#08111d;--panel:#101b2a;--border:#26394f;--text:#edf5ff;--muted:#9aa9bb;--cyan:#2dd4e7;--green:#36e39a;--red:#ff637e}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
-.app{min-height:100svh;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));gap:14px}
-.header{display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:800;font-size:18px;letter-spacing:-.3px}.brand b{color:var(--cyan)}.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}.dot{width:9px;height:9px;border-radius:50%;background:#65758a;display:inline-block}.dot.on{background:var(--green);box-shadow:0 0 12px rgba(54,227,154,.8)}.dot.err{background:var(--red)}
-.camera{position:relative;flex:1;min-height:330px;border-radius:20px;overflow:hidden;background:#020407;border:1px solid var(--border);box-shadow:0 14px 45px rgba(0,0,0,.28)}.camera video{width:100%;height:100%;object-fit:cover}.camera.front video{transform:scaleX(-1)}
-.badge{position:absolute;z-index:2;top:12px;left:12px;background:rgba(4,10,16,.72);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.13);padding:7px 10px;border-radius:999px;font-size:10px;letter-spacing:1.2px}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:14px;padding:16px 10px;font-size:15px;font-weight:800;min-height:54px}.primary{background:linear-gradient(135deg,#2dd4e7,#2589ee);color:#06121d}.secondary{background:#172334;border:1px solid #30435a;color:var(--text)}.hint{text-align:center;color:var(--muted);font-size:12px;line-height:1.55;padding:0 8px 4px}.hint.error{color:#ffb0bd}.hidden{display:none}
+
+:root{
+    --bg:#08111d;
+    --panel:#101b2a;
+    --panel2:#142235;
+    --border:#26394f;
+    --text:#edf5ff;
+    --muted:#9aa9bb;
+    --cyan:#2dd4e7;
+    --blue:#2589ee;
+    --green:#36e39a;
+    --red:#ff637e;
+    --orange:#ffb454;
+}
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+    margin:0;
+    min-height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+}
+
+body{
+    overflow-x:hidden;
+}
+
+.app{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+
+    padding:
+        max(14px,env(safe-area-inset-top))
+        14px
+        max(18px,env(safe-area-inset-bottom));
+
+    gap:12px;
+
+    max-width:850px;
+    margin:auto;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.brand{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+}
+
+.brand-title{
+    font-size:18px;
+    font-weight:850;
+    letter-spacing:-.4px;
+}
+
+.brand-title b{
+    color:var(--cyan);
+}
+
+.brand-sub{
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.status{
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    font-size:11px;
+    color:var(--muted);
+
+    white-space:nowrap;
+}
+
+.dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#65758a;
+    flex:none;
+}
+
+.dot.on{
+    background:var(--green);
+    box-shadow:
+        0 0 8px rgba(54,227,154,.9),
+        0 0 16px rgba(54,227,154,.4);
+}
+
+.dot.err{
+    background:var(--red);
+    box-shadow:
+        0 0 10px rgba(255,99,126,.6);
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+.camera{
+    position:relative;
+
+    width:100%;
+
+    min-height:380px;
+
+    flex:1;
+
+    overflow:hidden;
+
+    border-radius:20px;
+
+    background:#020407;
+
+    border:1px solid var(--border);
+
+    box-shadow:
+        0 16px 45px rgba(0,0,0,.35);
+}
+
+
+/* Raw camera */
+
+.camera video{
+
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+    z-index:1;
+}
+
+
+/* Processed YOLO frame */
+
+.camera #processedFrame{
+
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+    z-index:2;
+
+    display:none;
+}
+
+
+/* Mirror only front camera */
+
+.camera.front video{
+    transform:scaleX(-1);
+}
+
+
+/* =========================================================
+   CAMERA OVERLAYS
+========================================================= */
+
+.camera-top{
+
+    position:absolute;
+
+    z-index:10;
+
+    top:12px;
+
+    left:12px;
+
+    right:12px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    pointer-events:none;
+}
+
+
+.badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    background:
+        rgba(4,10,16,.78);
+
+    backdrop-filter:
+        blur(10px);
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    padding:
+        7px 10px;
+
+    border-radius:999px;
+
+    font-size:10px;
+
+    letter-spacing:1px;
+
+    font-weight:800;
+}
+
+
+.live-dot{
+
+    width:7px;
+
+    height:7px;
+
+    border-radius:50%;
+
+    background:var(--red);
+
+    box-shadow:
+        0 0 8px rgba(255,99,126,.8);
+}
+
+
+.ai-badge{
+
+    background:
+        rgba(4,10,16,.78);
+
+    backdrop-filter:
+        blur(10px);
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    padding:
+        7px 10px;
+
+    border-radius:999px;
+
+    font-size:10px;
+
+    color:var(--muted);
+
+    font-weight:700;
+}
+
+
+.ai-badge.active{
+
+    color:var(--green);
+
+    border-color:
+        rgba(54,227,154,.35);
+}
+
+
+/* =========================================================
+   BOTTOM CAMERA STATUS
+========================================================= */
+
+.camera-bottom{
+
+    position:absolute;
+
+    z-index:10;
+
+    bottom:12px;
+
+    left:12px;
+
+    right:12px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-end;
+
+    pointer-events:none;
+}
+
+
+.processing{
+
+    background:
+        rgba(4,10,16,.75);
+
+    backdrop-filter:
+        blur(10px);
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    padding:
+        8px 10px;
+
+    border-radius:10px;
+
+    font-size:10px;
+
+    color:var(--muted);
+}
+
+
+.fps-badge{
+
+    background:
+        rgba(4,10,16,.75);
+
+    backdrop-filter:
+        blur(10px);
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    padding:
+        8px 10px;
+
+    border-radius:10px;
+
+    font-size:11px;
+
+    font-weight:800;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:8px;
+}
+
+
+.stat{
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:14px;
+
+    padding:
+        11px 8px;
+
+    min-width:0;
+
+    text-align:center;
+}
+
+
+.stat-label{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.7px;
+
+    margin-bottom:5px;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+
+.stat-value{
+
+    font-size:20px;
+
+    font-weight:850;
+
+    letter-spacing:-.5px;
+}
+
+
+.stat.live .stat-value{
+    color:var(--cyan);
+}
+
+.stat.in .stat-value{
+    color:var(--green);
+}
+
+.stat.out .stat-value{
+    color:var(--red);
+}
+
+.stat.fps .stat-value{
+    color:var(--orange);
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.controls{
+
+    display:grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:10px;
+}
+
+
+.btn{
+
+    border:0;
+
+    border-radius:14px;
+
+    padding:15px 10px;
+
+    min-height:54px;
+
+    font-size:14px;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+    transition:
+        transform .15s ease,
+        opacity .15s ease;
+
+    touch-action:manipulation;
+}
+
+
+.btn:active{
+
+    transform:scale(.97);
+}
+
+
+.primary{
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--cyan),
+            var(--blue)
+        );
+
+    color:#06121d;
+}
+
+
+.secondary{
+
+    background:
+        #172334;
+
+    border:
+        1px solid #30435a;
+
+    color:var(--text);
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+.events-panel{
+
+    background:
+        var(--panel);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:16px;
+
+    overflow:hidden;
+}
+
+
+.events-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:
+        12px 14px;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+
+.events-title{
+
+    font-size:12px;
+
+    font-weight:800;
+}
+
+
+.events-count{
+
+    font-size:10px;
+
+    color:var(--muted);
+}
+
+
+.events-list{
+
+    max-height:150px;
+
+    overflow-y:auto;
+}
+
+
+.event{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    padding:
+        10px 14px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.05);
+
+    font-size:11px;
+}
+
+
+.event:last-child{
+    border-bottom:0;
+}
+
+
+.event-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+}
+
+
+.event-type{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+}
+
+
+.event-type.in{
+    background:var(--green);
+}
+
+
+.event-type.out{
+    background:var(--red);
+}
+
+
+.event-time{
+
+    color:var(--muted);
+
+    font-size:10px;
+}
+
+
+.empty-events{
+
+    padding:18px;
+
+    text-align:center;
+
+    color:var(--muted);
+
+    font-size:11px;
+}
+
+
+/* =========================================================
+   HINT
+========================================================= */
+
+.hint{
+
+    text-align:center;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+
+    padding:
+        0 8px 4px;
+}
+
+
+.hint.error{
+    color:#ffb0bd;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:480px){
+
+    .app{
+        padding-left:10px;
+        padding-right:10px;
+    }
+
+    .camera{
+        min-height:420px;
+        border-radius:16px;
+    }
+
+    .stats{
+        gap:6px;
+    }
+
+    .stat{
+        padding:10px 4px;
+    }
+
+    .stat-value{
+        font-size:18px;
+    }
+
+}
+
+
+@media(min-width:700px){
+
+    .camera{
+        min-height:560px;
+    }
+
+    .app{
+        padding-top:22px;
+    }
+
+}
+
 </style>
 </head>
+
+
 <body>
+
 <div class="app">
-  <div class="header">
-    <div class="brand">Vision <b>Counter</b> · Camera</div>
-    <div class="status"><span id="dot" class="dot"></span><span id="status">Preparing camera</span></div>
-  </div>
 
-  <div id="cameraBox" class="camera">
-    <div class="badge">LIVE MOBILE CAMERA</div>
-    <video id="video" autoplay playsinline muted></video>
-  </div>
 
-  <div class="controls">
-    <button id="startBtn" class="btn primary">▶ Enable Camera</button>
-    <button id="flipBtn" class="btn secondary">🔄 Flip Camera</button>
-  </div>
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
-  <div class="hint" id="hint">Your device camera is detected automatically. Rear camera is preferred by default.</div>
+    <div class="header">
+
+        <div class="brand">
+
+            <div class="brand-title">
+                Vision <b>Counter</b>
+            </div>
+
+            <div class="brand-sub">
+                Remote AI Camera
+            </div>
+
+        </div>
+
+
+        <div class="status">
+
+            <span
+                id="dot"
+                class="dot"
+            ></span>
+
+            <span id="status">
+                Preparing camera
+            </span>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         CAMERA
+    ====================================================== -->
+
+    <div
+        id="cameraBox"
+        class="camera"
+    >
+
+
+        <!-- RAW PHONE CAMERA -->
+
+        <video
+            id="video"
+            autoplay
+            playsinline
+            muted
+        ></video>
+
+
+        <!-- PROCESSED YOLO FRAME -->
+
+        <img
+            id="processedFrame"
+            alt="AI processed camera stream"
+        >
+
+
+        <!-- TOP OVERLAY -->
+
+        <div class="camera-top">
+
+            <div class="badge">
+
+                <span class="live-dot"></span>
+
+                LIVE CAMERA
+
+            </div>
+
+
+            <div
+                id="aiBadge"
+                class="ai-badge"
+            >
+                AI CONNECTING
+            </div>
+
+        </div>
+
+
+
+        <!-- BOTTOM OVERLAY -->
+
+        <div class="camera-bottom">
+
+            <div
+                id="processingText"
+                class="processing"
+            >
+                Waiting for AI frames...
+            </div>
+
+
+            <div
+                id="fpsBadge"
+                class="fps-badge"
+            >
+                0 FPS
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         LIVE STATS
+    ====================================================== -->
+
+    <div class="stats">
+
+
+        <div class="stat live">
+
+            <span class="stat-label">
+                Live Count
+            </span>
+
+            <span
+                id="liveCount"
+                class="stat-value"
+            >
+                0
+            </span>
+
+        </div>
+
+
+        <div class="stat in">
+
+            <span class="stat-label">
+                Total IN
+            </span>
+
+            <span
+                id="inCount"
+                class="stat-value"
+            >
+                0
+            </span>
+
+        </div>
+
+
+        <div class="stat out">
+
+            <span class="stat-label">
+                Total OUT
+            </span>
+
+            <span
+                id="outCount"
+                class="stat-value"
+            >
+                0
+            </span>
+
+        </div>
+
+
+        <div class="stat fps">
+
+            <span class="stat-label">
+                AI FPS
+            </span>
+
+            <span
+                id="fpsValue"
+                class="stat-value"
+            >
+                0
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         CONTROLS
+    ====================================================== -->
+
+    <div class="controls">
+
+        <button
+            id="startBtn"
+            class="btn primary"
+        >
+            ▶ Start Camera
+        </button>
+
+
+        <button
+            id="flipBtn"
+            class="btn secondary"
+        >
+            🔄 Flip Camera
+        </button>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         EVENTS
+    ====================================================== -->
+
+    <div class="events-panel">
+
+        <div class="events-header">
+
+            <div class="events-title">
+                Recent Events
+            </div>
+
+            <div
+                id="eventsCount"
+                class="events-count"
+            >
+                0 events
+            </div>
+
+        </div>
+
+
+        <div
+            id="eventsList"
+            class="events-list"
+        >
+
+            <div class="empty-events">
+
+                No crossing events yet
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         HINT
+    ====================================================== -->
+
+    <div
+        id="hint"
+        class="hint"
+    >
+        Rear camera is preferred automatically. Allow camera permission to begin live AI counting.
+    </div>
+
+
 </div>
 
+
+
 <script>
-const video=document.getElementById('video');
-const startBtn=document.getElementById('startBtn');
-const flipBtn=document.getElementById('flipBtn');
-const statusEl=document.getElementById('status');
-const dot=document.getElementById('dot');
-const hint=document.getElementById('hint');
-const cameraBox=document.getElementById('cameraBox');
 
-let stream=null, ws=null, timer=null;
-let facing='environment'; // Prefer rear camera on phones.
-let canvas=document.createElement('canvas');
-let ctx=canvas.getContext('2d', {alpha:false});
 
-function setStatus(text,state='idle'){
-  statusEl.textContent=text;
-  dot.className='dot'+(state==='on'?' on':state==='error'?' err':'');
-  hint.classList.toggle('error',state==='error');
+/* =========================================================
+   DOM
+========================================================= */
+
+const video =
+    document.getElementById("video");
+
+const processedFrame =
+    document.getElementById("processedFrame");
+
+const startBtn =
+    document.getElementById("startBtn");
+
+const flipBtn =
+    document.getElementById("flipBtn");
+
+const statusEl =
+    document.getElementById("status");
+
+const dot =
+    document.getElementById("dot");
+
+const hint =
+    document.getElementById("hint");
+
+const cameraBox =
+    document.getElementById("cameraBox");
+
+const aiBadge =
+    document.getElementById("aiBadge");
+
+const processingText =
+    document.getElementById("processingText");
+
+const fpsBadge =
+    document.getElementById("fpsBadge");
+
+
+const liveCount =
+    document.getElementById("liveCount");
+
+const inCount =
+    document.getElementById("inCount");
+
+const outCount =
+    document.getElementById("outCount");
+
+const fpsValue =
+    document.getElementById("fpsValue");
+
+
+const eventsList =
+    document.getElementById("eventsList");
+
+const eventsCount =
+    document.getElementById("eventsCount");
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let stream = null;
+
+let ws = null;
+
+let timer = null;
+
+let facing = "environment";
+
+let isStarting = false;
+
+let canvas =
+    document.createElement("canvas");
+
+let ctx =
+    canvas.getContext(
+        "2d",
+        {
+            alpha:false
+        }
+    );
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(
+    text,
+    state = "idle"
+){
+
+    statusEl.textContent =
+        text;
+
+
+    dot.className =
+        "dot" +
+        (
+            state === "on"
+                ? " on"
+                : state === "error"
+                    ? " err"
+                    : ""
+        );
+
+
+    hint.classList.toggle(
+        "error",
+        state === "error"
+    );
 }
+
+
+function setAIActive(active){
+
+    if(active){
+
+        aiBadge.textContent =
+            "AI PROCESSING";
+
+        aiBadge.classList.add(
+            "active"
+        );
+
+    }else{
+
+        aiBadge.textContent =
+            "AI CONNECTING";
+
+        aiBadge.classList.remove(
+            "active"
+        );
+    }
+}
+
+
+/* =========================================================
+   WEBSOCKET URL
+========================================================= */
+
 function wsUrl(){
-  return (location.protocol==='https:'?'wss://':'ws://') + location.host + '/phone-stream';
+
+    const protocol =
+        location.protocol === "https:"
+            ? "wss://"
+            : "ws://";
+
+    return (
+        protocol +
+        location.host +
+        "/phone-stream"
+    );
 }
+
+
+/* =========================================================
+   CAMERA SUPPORT
+========================================================= */
+
 function isCameraAvailable(){
-  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+    return !!(
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+    );
 }
+
+
 function isSecureForCamera(){
-  return window.isSecureContext || location.hostname==='localhost';
+
+    return (
+        window.isSecureContext ||
+        location.hostname === "localhost"
+    );
 }
+
+
+/* =========================================================
+   OPEN CAMERA
+========================================================= */
 
 async function openCamera(){
-  if(!isCameraAvailable()) throw new Error('Camera API is not available in this browser.');
 
-  if(stream){
-    stream.getTracks().forEach(track=>track.stop());
-    stream=null;
-  }
+    if(!isCameraAvailable()){
 
-  setStatus('Requesting camera permission');
-
-  const preferred={
-    video:{
-      facingMode:{ideal:facing},
-      width:{ideal:1280,max:1920},
-      height:{ideal:720,max:1080}
-    },
-    audio:false
-  };
-
-  try{
-    stream=await navigator.mediaDevices.getUserMedia(preferred);
-  }catch(err){
-    // Desktop webcams may not expose facingMode. Graceful fallback.
-    if(facing==='environment'){
-      stream=await navigator.mediaDevices.getUserMedia({
-        video:{width:{ideal:1280},height:{ideal:720}},
-        audio:false
-      });
-    }else{
-      throw err;
+        throw new Error(
+            "Camera API is not available in this browser."
+        );
     }
-  }
 
-  video.srcObject=stream;
-  await video.play();
 
-  const settings=stream.getVideoTracks()[0].getSettings();
-  if(settings.facingMode) facing=settings.facingMode;
+    if(stream){
 
-  cameraBox.classList.toggle('front',facing==='user');
-  setStatus('Camera ready','on');
-  startBtn.textContent='■ Stop Camera';
+        stream
+            .getTracks()
+            .forEach(
+                track => track.stop()
+            );
+
+        stream = null;
+    }
+
+
+    setStatus(
+        "Requesting camera"
+    );
+
+
+    const preferred = {
+
+        video:{
+
+            facingMode:{
+                ideal:facing
+            },
+
+            width:{
+                ideal:1280,
+                max:1920
+            },
+
+            height:{
+                ideal:720,
+                max:1080
+            }
+
+        },
+
+        audio:false
+    };
+
+
+    try{
+
+        stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia(
+                    preferred
+                );
+
+    }catch(error){
+
+        /*
+         Desktop fallback.
+
+         Some webcams don't expose
+         facingMode.
+        */
+
+        stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+
+                    video:{
+
+                        width:{
+                            ideal:1280
+                        },
+
+                        height:{
+                            ideal:720
+                        }
+
+                    },
+
+                    audio:false
+
+                });
+    }
+
+
+    video.srcObject =
+        stream;
+
+
+    await video.play();
+
+
+    const track =
+        stream
+            .getVideoTracks()[0];
+
+
+    const settings =
+        track.getSettings();
+
+
+    if(settings.facingMode){
+
+        facing =
+            settings.facingMode;
+    }
+
+
+    cameraBox.classList.toggle(
+        "front",
+        facing === "user"
+    );
+
+
+    setStatus(
+        "Camera ready",
+        "on"
+    );
+
+
+    startBtn.textContent =
+        "■ Stop Camera";
 }
+
+
+/* =========================================================
+   CONNECT WEBSOCKET
+========================================================= */
 
 function connectStream(){
-  return new Promise((resolve,reject)=>{
-    ws=new WebSocket(wsUrl());
-    ws.binaryType='arraybuffer';
 
-    ws.onopen=()=>{
-      setStatus('Live stream connected','on');
-      resolve();
-    };
-    ws.onerror=()=>reject(new Error('Could not connect the camera stream.'));
-    ws.onclose=()=>{
-      if(stream) setStatus('Stream connection closed','error');
-    };
-  });
+    return new Promise(
+        (resolve,reject) => {
+
+            let resolved = false;
+
+            try{
+
+                ws =
+                    new WebSocket(
+                        wsUrl()
+                    );
+
+
+                ws.binaryType =
+                    "arraybuffer";
+
+
+                ws.onopen =
+                    () => {
+
+                        resolved = true;
+
+                        setStatus(
+                            "AI connected",
+                            "on"
+                        );
+
+
+                        processingText.textContent =
+                            "Streaming frames to AI...";
+
+
+                        resolve();
+                    };
+
+
+                /* ---------------------------------------------
+                   RECEIVE SERVER RESULTS
+                --------------------------------------------- */
+
+                ws.onmessage =
+                    (event) => {
+
+                        try{
+
+                            const data =
+                                JSON.parse(
+                                    event.data
+                                );
+
+
+                            /* STATUS */
+
+                            if(
+                                data.type === "status"
+                            ){
+
+                                if(
+                                    data.status === "connected"
+                                ){
+
+                                    setStatus(
+                                        "Live AI connected",
+                                        "on"
+                                    );
+
+                                    processingText.textContent =
+                                        "Waiting for detection...";
+                                }
+
+                                return;
+                            }
+
+
+                            /* CONFIG */
+
+                            if(
+                                data.type === "config_updated"
+                            ){
+
+                                if(data.stats){
+
+                                    updateStats(
+                                        data.stats
+                                    );
+                                }
+
+                                return;
+                            }
+
+
+                            /* ERROR */
+
+                            if(
+                                data.type === "error"
+                            ){
+
+                                console.error(
+                                    "Server error:",
+                                    data.message
+                                );
+
+                                setStatus(
+                                    "Processing error",
+                                    "error"
+                                );
+
+                                processingText.textContent =
+                                    data.message ||
+                                    "AI processing error";
+
+                                return;
+                            }
+
+
+                            /* ---------------------------------
+                               PROCESSED FRAME
+                            ---------------------------------- */
+
+                            if(
+                                data.type === "frame"
+                            ){
+
+                                if(data.image){
+
+                                    processedFrame.src =
+                                        "data:image/jpeg;base64," +
+                                        data.image;
+
+
+                                    processedFrame.style.display =
+                                        "block";
+
+
+                                    setAIActive(
+                                        true
+                                    );
+
+
+                                    processingText.textContent =
+                                        "Person detection & tracking active";
+                                }
+
+
+                                if(data.stats){
+
+                                    updateStats(
+                                        data.stats
+                                    );
+                                }
+
+
+                                if(
+                                    Array.isArray(
+                                        data.events
+                                    )
+                                ){
+
+                                    updateEvents(
+                                        data.events
+                                    );
+                                }
+
+                            }
+
+
+                        }catch(error){
+
+                            console.error(
+                                "Invalid server message:",
+                                error
+                            );
+                        }
+                    };
+
+
+                ws.onerror =
+                    () => {
+
+                        if(!resolved){
+
+                            reject(
+                                new Error(
+                                    "Could not connect to the AI server."
+                                )
+                            );
+                        }
+                    };
+
+
+                ws.onclose =
+                    () => {
+
+                        setAIActive(
+                            false
+                        );
+
+
+                        if(stream){
+
+                            setStatus(
+                                "AI stream disconnected",
+                                "error"
+                            );
+
+                            processingText.textContent =
+                                "Connection closed";
+                        }
+                    };
+
+
+            }catch(error){
+
+                reject(error);
+            }
+
+        }
+    );
 }
+
+
+/* =========================================================
+   SEND CAMERA FRAME
+========================================================= */
 
 function sendFrame(){
-  if(!stream || !ws || ws.readyState!==WebSocket.OPEN || video.readyState<2) return;
-  if(!video.videoWidth || !video.videoHeight) return;
-  if(ws.bufferedAmount>750000) return;
 
-  const maxWidth=640;
-  const scale=Math.min(1,maxWidth/video.videoWidth);
-  canvas.width=Math.max(2,Math.round(video.videoWidth*scale));
-  canvas.height=Math.max(2,Math.round(video.videoHeight*scale));
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-
-  canvas.toBlob(blob=>{
-    if(blob && ws && ws.readyState===WebSocket.OPEN && ws.bufferedAmount<750000){
-      ws.send(blob);
+    if(
+        !stream ||
+        !ws ||
+        ws.readyState !== WebSocket.OPEN
+    ){
+        return;
     }
-  },'image/jpeg',0.72);
+
+
+    if(video.readyState < 2){
+        return;
+    }
+
+
+    if(
+        !video.videoWidth ||
+        !video.videoHeight
+    ){
+        return;
+    }
+
+
+    /*
+     Prevent WebSocket backlog.
+
+     If server/network is busy,
+     skip this frame.
+
+     Real-time systems should
+     process the latest frame,
+     not queue old frames.
+    */
+
+    if(
+        ws.bufferedAmount > 500000
+    ){
+        return;
+    }
+
+
+    /*
+     Keep frame small enough for
+     real-time inference.
+    */
+
+    const maxWidth = 640;
+
+
+    const scale =
+        Math.min(
+            1,
+            maxWidth /
+            video.videoWidth
+        );
+
+
+    canvas.width =
+        Math.max(
+            2,
+            Math.round(
+                video.videoWidth *
+                scale
+            )
+        );
+
+
+    canvas.height =
+        Math.max(
+            2,
+            Math.round(
+                video.videoHeight *
+                scale
+            )
+        );
+
+
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    canvas.toBlob(
+
+        (blob) => {
+
+            if(
+                blob &&
+                ws &&
+                ws.readyState === WebSocket.OPEN &&
+                ws.bufferedAmount < 500000
+            ){
+
+                ws.send(
+                    blob
+                );
+            }
+
+        },
+
+        "image/jpeg",
+
+        0.72
+    );
 }
+
+
+/* =========================================================
+   UPDATE STATS
+========================================================= */
+
+function updateStats(stats){
+
+    /*
+     Supports slightly different
+     backend naming safely.
+    */
+
+
+    const live =
+        stats.live_count ??
+        stats.current_count ??
+        stats.total_count ??
+        stats.occupancy ??
+        0;
+
+
+    const entered =
+        stats.in_count ??
+        stats.entered ??
+        stats.total_in ??
+        0;
+
+
+    const exited =
+        stats.out_count ??
+        stats.exited ??
+        stats.total_out ??
+        0;
+
+
+    const fps =
+        stats.fps ??
+        stats.processing_fps ??
+        0;
+
+
+    liveCount.textContent =
+        live;
+
+
+    inCount.textContent =
+        entered;
+
+
+    outCount.textContent =
+        exited;
+
+
+    const formattedFPS =
+        Number(fps || 0)
+            .toFixed(1);
+
+
+    fpsValue.textContent =
+        formattedFPS;
+
+
+    fpsBadge.textContent =
+        formattedFPS +
+        " FPS";
+}
+
+
+/* =========================================================
+   UPDATE EVENTS
+========================================================= */
+
+function updateEvents(events){
+
+    if(!Array.isArray(events)){
+
+        return;
+    }
+
+
+    eventsCount.textContent =
+        events.length +
+        (
+            events.length === 1
+                ? " event"
+                : " events"
+        );
+
+
+    if(events.length === 0){
+
+        eventsList.innerHTML =
+            `
+            <div class="empty-events">
+                No crossing events yet
+            </div>
+            `;
+
+        return;
+    }
+
+
+    /*
+     Show newest first.
+
+     Limit UI to avoid huge DOM.
+    */
+
+    const latest =
+        [...events]
+            .reverse()
+            .slice(0,20);
+
+
+    eventsList.innerHTML =
+        latest
+            .map(
+                event => {
+
+                    const direction =
+                        String(
+                            event.direction ||
+                            event.type ||
+                            event.event ||
+                            ""
+                        ).toUpperCase();
+
+
+                    const isIn =
+                        direction.includes("IN") ||
+                        direction.includes("ENTER");
+
+
+                    const label =
+                        isIn
+                            ? "Entered"
+                            : "Exited";
+
+
+                    const trackId =
+                        event.track_id ??
+                        event.id ??
+                        event.person_id ??
+                        "—";
+
+
+                    const time =
+                        formatEventTime(
+                            event.timestamp ||
+                            event.time ||
+                            event.created_at
+                        );
+
+
+                    return `
+
+                        <div class="event">
+
+                            <div class="event-left">
+
+                                <span
+                                    class="event-type ${
+                                        isIn
+                                            ? "in"
+                                            : "out"
+                                    }"
+                                ></span>
+
+                                <span>
+                                    Person #${trackId}
+                                    · ${label}
+                                </span>
+
+                            </div>
+
+                            <span class="event-time">
+                                ${time}
+                            </span>
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
+}
+
+
+/* =========================================================
+   FORMAT EVENT TIME
+========================================================= */
+
+function formatEventTime(value){
+
+    if(!value){
+
+        return "Just now";
+    }
+
+
+    try{
+
+        if(
+            typeof value === "number"
+        ){
+
+            const date =
+                new Date(
+                    value < 100000000000
+                        ? value * 1000
+                        : value
+                );
+
+
+            return date.toLocaleTimeString(
+                [],
+                {
+                    hour:"2-digit",
+                    minute:"2-digit",
+                    second:"2-digit"
+                }
+            );
+        }
+
+
+        return String(value);
+
+    }catch(error){
+
+        return "Just now";
+    }
+}
+
+
+/* =========================================================
+   START
+========================================================= */
 
 async function start(){
-  try{
-    if(!isSecureForCamera()){
-      throw new Error('Camera access requires a secure HTTPS deployment. Please open the official deployed project link.');
+
+    if(isStarting){
+        return;
     }
 
-    await openCamera();
-    await connectStream();
 
-    clearInterval(timer);
-    timer=setInterval(sendFrame,80);
-    hint.textContent=(facing==='environment'
-      ?'Rear camera is active and streaming to Vision Counter.'
-      :'Front camera is active and streaming to Vision Counter.');
-  }catch(err){
-    console.error(err);
-    setStatus('Camera permission unavailable','error');
+    isStarting = true;
 
-    if(err.name==='NotAllowedError'){
-      hint.textContent='Camera permission was denied. Allow Camera access in your browser settings, then tap Enable Camera.';
-    }else if(err.name==='NotFoundError'){
-      hint.textContent='No compatible camera was found on this device.';
-    }else{
-      hint.textContent=err.message || 'Unable to start the camera. Please try again.';
+
+    try{
+
+        if(
+            !isSecureForCamera()
+        ){
+
+            throw new Error(
+                "Camera access requires a secure HTTPS connection."
+            );
+        }
+
+
+        startBtn.disabled =
+            true;
+
+
+        startBtn.textContent =
+            "Starting...";
+
+
+        setStatus(
+            "Opening camera"
+        );
+
+
+        setAIActive(
+            false
+        );
+
+
+        processedFrame.style.display =
+            "none";
+
+
+        await openCamera();
+
+
+        await connectStream();
+
+
+        clearInterval(
+            timer
+        );
+
+
+        /*
+         10 FPS sending rate.
+
+         Server processes the newest
+         available frame.
+        */
+
+        timer =
+            setInterval(
+                sendFrame,
+                100
+            );
+
+
+        hint.textContent =
+            facing === "environment"
+                ? "Rear camera is active. Live frames are being processed by Vision Counter."
+                : "Front camera is active. Live frames are being processed by Vision Counter.";
+
+
+        processingText.textContent =
+            "Live stream active";
+
+
+        setStatus(
+            "Live processing",
+            "on"
+        );
+
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+
+
+        setStatus(
+            "Camera unavailable",
+            "error"
+        );
+
+
+        setAIActive(
+            false
+        );
+
+
+        if(
+            error.name ===
+            "NotAllowedError"
+        ){
+
+            hint.textContent =
+                "Camera permission was denied. Allow camera access in your browser settings and try again.";
+
+        }else if(
+            error.name ===
+            "NotFoundError"
+        ){
+
+            hint.textContent =
+                "No compatible camera was found on this device.";
+
+        }else{
+
+            hint.textContent =
+                error.message ||
+                "Unable to start the camera.";
+        }
+
+
+        startBtn.textContent =
+            "▶ Start Camera";
+
+    }finally{
+
+        startBtn.disabled =
+            false;
+
+        isStarting =
+            false;
     }
-
-    startBtn.textContent='▶ Enable Camera';
-  }
 }
+
+
+/* =========================================================
+   STOP
+========================================================= */
 
 function stop(){
-  clearInterval(timer); timer=null;
-  if(ws){
-    try{ws.send(JSON.stringify({action:'stop'}));}catch(e){}
-    try{ws.close();}catch(e){}
-    ws=null;
-  }
-  if(stream){
-    stream.getTracks().forEach(track=>track.stop());
-    stream=null;
-  }
-  video.srcObject=null;
-  setStatus('Camera stopped');
-  hint.textContent='Tap Enable Camera to start streaming again.';
-  startBtn.textContent='▶ Enable Camera';
+
+    clearInterval(
+        timer
+    );
+
+
+    timer =
+        null;
+
+
+    if(ws){
+
+        try{
+
+            if(
+                ws.readyState ===
+                WebSocket.OPEN
+            ){
+
+                ws.send(
+                    JSON.stringify({
+                        action:"stop"
+                    })
+                );
+            }
+
+        }catch(error){}
+
+
+        try{
+
+            ws.close();
+
+        }catch(error){}
+
+
+        ws =
+            null;
+    }
+
+
+    if(stream){
+
+        stream
+            .getTracks()
+            .forEach(
+                track => track.stop()
+            );
+
+
+        stream =
+            null;
+    }
+
+
+    video.srcObject =
+        null;
+
+
+    processedFrame.removeAttribute(
+        "src"
+    );
+
+
+    processedFrame.style.display =
+        "none";
+
+
+    setAIActive(
+        false
+    );
+
+
+    processingText.textContent =
+        "Camera stopped";
+
+
+    fpsBadge.textContent =
+        "0 FPS";
+
+
+    setStatus(
+        "Camera stopped"
+    );
+
+
+    hint.textContent =
+        "Tap Start Camera to begin live AI counting.";
+
+
+    startBtn.textContent =
+        "▶ Start Camera";
 }
 
-startBtn.addEventListener('click',()=>stream?stop():start());
 
-flipBtn.addEventListener('click',async()=>{
-  facing=facing==='environment'?'user':'environment';
-  if(stream){
-    try{
-      await openCamera();
-      hint.textContent=(facing==='environment'?'Rear':'Front')+' camera active. Streaming continues.';
-    }catch(err){
-      console.error(err);
-      setStatus('Could not switch camera','error');
-      hint.textContent='Unable to switch camera on this device.';
+/* =========================================================
+   START / STOP BUTTON
+========================================================= */
+
+startBtn.addEventListener(
+    "click",
+    () => {
+
+        if(stream){
+
+            stop();
+
+        }else{
+
+            start();
+        }
+
     }
-  }else{
-    hint.textContent=(facing==='environment'?'Rear':'Front')+' camera selected. Tap Enable Camera.';
-  }
-});
+);
 
-/*
-  Auto-detect behavior:
-  - On mobile: opening the project URL routes here and requests the device camera.
-  - On desktop: the main dashboard remains on the webcam workflow.
-  - Browser permission policies can still require user approval.
-*/
-window.addEventListener('load',()=>{
-  if(isSecureForCamera() && isCameraAvailable()){
-    start(); // Automatically request the device camera; button remains as fallback.
-  }else if(!isSecureForCamera()){
-    setStatus('Secure connection required','error');
-    hint.textContent='Use the deployed HTTPS project link to access the phone camera.';
-  }else{
-    setStatus('Camera unavailable','error');
-    hint.textContent='This browser does not provide camera access.';
-  }
-});
 
-window.addEventListener('beforeunload',stop);
+/* =========================================================
+   FLIP CAMERA
+========================================================= */
+
+flipBtn.addEventListener(
+    "click",
+
+    async () => {
+
+        facing =
+            facing === "environment"
+                ? "user"
+                : "environment";
+
+
+        /*
+         If camera is running,
+         reopen camera with the
+         selected facing mode.
+        */
+
+        if(stream){
+
+            try{
+
+                /*
+                 Stop old tracks.
+                */
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        track =>
+                            track.stop()
+                    );
+
+
+                stream =
+                    null;
+
+
+                await openCamera();
+
+
+                hint.textContent =
+                    facing === "environment"
+                        ? "Rear camera active."
+                        : "Front camera active.";
+
+
+            }catch(error){
+
+                console.error(
+                    error
+                );
+
+
+                setStatus(
+                    "Could not switch camera",
+                    "error"
+                );
+
+
+                hint.textContent =
+                    "Unable to switch camera on this device.";
+            }
+
+        }else{
+
+            hint.textContent =
+                facing === "environment"
+                    ? "Rear camera selected. Tap Start Camera."
+                    : "Front camera selected. Tap Start Camera.";
+        }
+
+    }
+);
+
+
+/* =========================================================
+   PAGE LOAD
+========================================================= */
+
+window.addEventListener(
+    "load",
+
+    () => {
+
+        if(
+            !isCameraAvailable()
+        ){
+
+            setStatus(
+                "Camera unavailable",
+                "error"
+            );
+
+
+            hint.textContent =
+                "This browser does not provide camera access.";
+
+            return;
+        }
+
+
+        if(
+            !isSecureForCamera()
+        ){
+
+            setStatus(
+                "Secure connection required",
+                "error"
+            );
+
+
+            hint.textContent =
+                "Open this page through your deployed HTTPS project URL.";
+
+            return;
+        }
+
+
+        setStatus(
+            "Ready to start"
+        );
+
+
+        hint.textContent =
+            "Rear camera is preferred automatically. Tap Start Camera to begin.";
+    }
+);
+
+
+/* =========================================================
+   CLEANUP
+========================================================= */
+
+window.addEventListener(
+    "beforeunload",
+    stop
+);
+
+
+window.addEventListener(
+    "pagehide",
+    stop
+);
+
 </script>
+
 </body>
 </html>
