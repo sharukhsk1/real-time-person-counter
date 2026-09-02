@@ -790,15 +790,34 @@ class VideoProcessor:
         logger.info("Source started: %s (%sx%s)", source, fw, fh)
 
     def start_phone_capture(self):
-        """Prepare the existing processor to receive frames from a phone."""
+        """
+        Prepare the existing single-model processor to receive frames
+        from the phone browser camera.
+        """
+
+        # Stop only the previous capture source.
         self.stop_capture()
+
         self.source_mode = "phone"
+
+        # Reset phone frame state.
         self.phone_frame = None
         self.phone_frame_seq = 0
         self.phone_processed_seq = -1
+
+        # IMPORTANT:
+        # Phone dimensions may be different from webcam/CCTV dimensions.
+        # Counter will be recreated automatically when the first phone
+        # frame arrives.
+        self.counter = None
+
+        with self.lock:
+            self.processed_frame = None
+
         self.phone_connected = True
         self.last_source = "PHONE_CAMERA"
         self.is_running = True
+
         logger.info("Phone camera source prepared")
 
     def submit_phone_jpeg(self, jpeg_bytes: bytes) -> bool:
@@ -1107,63 +1126,447 @@ async def phone_status():
 @app.websocket("/phone-stream")
 async def phone_stream_endpoint(websocket: WebSocket):
     """
-    Receive JPEG frames directly from the phone.
+    Full-duplex phone camera streaming.
 
-    No second model is created here. Frames enter the existing VideoProcessor,
-    which uses the already-loaded yolov8n-seg.pt model and existing counter.
+    FLOW:
+
+        PHONE CAMERA
+             ↓
+        JPEG FRAME
+             ↓
+        /phone-stream
+             ↓
+        Existing VideoProcessor
+             ↓
+        Existing SINGLE YOLO model
+             ↓
+        Person segmentation
+             ↓
+        ByteTrack
+             ↓
+        IN / OUT counter
+             ↓
+        Processed frame + stats
+             ↓
+        PHONE UI
     """
+
     await websocket.accept()
+
     global processor
 
+    sender_task = None
+
+    async def send_results_to_phone():
+        """
+        Sends the latest YOLO processed frame and statistics
+        back to the phone.
+
+        No second YOLO model is created.
+        """
+
+        last_sent_frame_seq = -1
+
+        try:
+            while True:
+
+                if (
+                    processor is not None
+                    and processor.is_running
+                    and processor.source_mode == "phone"
+                    and processor.phone_connected
+                ):
+
+                    # Send only when a new phone frame has been processed.
+                    current_seq = processor.phone_processed_seq
+
+                    if (
+                        current_seq >= 0
+                        and current_seq != last_sent_frame_seq
+                    ):
+
+                        jpeg = processor.get_frame_jpeg()
+
+                        if jpeg:
+
+                            stats = processor.get_stats()
+
+                            await websocket.send_json({
+                                "type": "frame",
+
+                                "image": base64.b64encode(
+                                    jpeg
+                                ).decode("utf-8"),
+
+                                "stats": stats,
+
+                                "events": stats.get(
+                                    "events",
+                                    []
+                                ),
+                            })
+
+                            last_sent_frame_seq = current_seq
+
+                # Prevent excessive WebSocket messages.
+                await asyncio.sleep(0.03)
+
+        except asyncio.CancelledError:
+            pass
+
+        except WebSocketDisconnect:
+            pass
+
+        except Exception as exc:
+            logger.debug(
+                "Phone result sender stopped: %s",
+                exc
+            )
+
+
     try:
+
         if processor is None:
-            await websocket.close(code=1011)
+
+            await websocket.close(
+                code=1011
+            )
+
             return
 
+
+        # ---------------------------------------------------------
+        # LOAD EXISTING SINGLE MODEL ONLY
+        # ---------------------------------------------------------
+
         if not processor.model_loaded:
+
             processor.load_model()
+
+
+        # ---------------------------------------------------------
+        # STOP PREVIOUS SOURCE
+        # ---------------------------------------------------------
 
         processor.stop()
 
+
+        # Stop old processing task safely.
         if (
             processor.processing_task is not None
             and not processor.processing_task.done()
         ):
+
             processor.processing_task.cancel()
 
+            try:
+
+                await processor.processing_task
+
+            except asyncio.CancelledError:
+                pass
+
+            except Exception:
+                pass
+
+
+        # ---------------------------------------------------------
+        # START PHONE CAPTURE
+        # ---------------------------------------------------------
+
         processor.start_phone_capture()
+
+
+        # Existing processing pipeline.
         processor.processing_task = asyncio.create_task(
             processor.process_frames()
         )
 
-        await websocket.send_json(
-            {"type": "status", "status": "connected"}
+
+        # Start result sender.
+        sender_task = asyncio.create_task(
+            send_results_to_phone()
         )
 
+
+        # Confirm connection.
+        await websocket.send_json({
+
+            "type": "status",
+
+            "status": "connected",
+
+            "message":
+                "Phone camera connected to Vision Counter"
+
+        })
+
+
+        logger.info(
+            "Phone camera WebSocket connected"
+        )
+
+
+        # =========================================================
+        # RECEIVE PHONE DATA
+        # =========================================================
+
         while True:
+
             message = await websocket.receive()
 
-            if message.get("bytes") is not None:
-                jpeg = message["bytes"]
-                processor.submit_phone_jpeg(jpeg)
 
-            elif message.get("text"):
+            # -----------------------------------------------------
+            # PHONE JPEG FRAME
+            # -----------------------------------------------------
+
+            if message.get("bytes") is not None:
+
+                jpeg = message["bytes"]
+
+                if processor is not None:
+
+                    processor.submit_phone_jpeg(
+                        jpeg
+                    )
+
+
+            # -----------------------------------------------------
+            # CONTROL MESSAGE
+            # -----------------------------------------------------
+
+            elif message.get("text") is not None:
+
                 try:
-                    data = json.loads(message["text"])
-                    if data.get("action") == "stop":
+
+                    data = json.loads(
+                        message["text"]
+                    )
+
+                    action = data.get(
+                        "action"
+                    )
+
+
+                    # STOP
+                    if action == "stop":
+
+                        logger.info(
+                            "Phone requested stream stop"
+                        )
+
                         break
-                except Exception:
-                    pass
+
+
+                    # LIVE CONFIGURATION
+                    elif action == "config":
+
+                        cfg = data.get(
+                            "config",
+                            {}
+                        )
+
+
+                        # Boundary position
+                        if "line_position" in cfg:
+
+                            ratio = float(
+                                cfg["line_position"]
+                            )
+
+                            # Support both 0-1 and 0-100.
+                            if ratio > 1:
+                                ratio /= 100.0
+
+                            ratio = max(
+                                0.05,
+                                min(
+                                    0.95,
+                                    ratio
+                                )
+                            )
+
+                            config.line_position_ratio = ratio
+
+                            if (
+                                processor.counter is not None
+                            ):
+
+                                processor.counter.set_line_ratio(
+                                    ratio
+                                )
+
+
+                        # Confidence
+                        if "conf_threshold" in cfg:
+
+                            config.conf_threshold = max(
+                                0.10,
+                                min(
+                                    0.95,
+                                    float(
+                                        cfg[
+                                            "conf_threshold"
+                                        ]
+                                    )
+                                )
+                            )
+
+
+                        # Hysteresis / dead zone
+                        if "hysteresis" in cfg:
+
+                            config.hysteresis_pixels = max(
+                                10,
+                                min(
+                                    150,
+                                    int(
+                                        cfg[
+                                            "hysteresis"
+                                        ]
+                                    )
+                                )
+                            )
+
+
+                        # Masks
+                        if "show_masks" in cfg:
+
+                            config.show_masks = bool(
+                                cfg[
+                                    "show_masks"
+                                ]
+                            )
+
+
+                        # Track IDs
+                        if "show_track_ids" in cfg:
+
+                            config.show_track_ids = bool(
+                                cfg[
+                                    "show_track_ids"
+                                ]
+                            )
+
+
+                        await websocket.send_json({
+
+                            "type":
+                                "config_updated",
+
+                            "stats":
+                                processor.get_stats()
+
+                        })
+
+
+                    # RESET COUNTS
+                    elif action == "reset":
+
+                        if (
+                            processor.counter is not None
+                        ):
+
+                            processor.counter.total_count = 0
+                            processor.counter.in_count = 0
+                            processor.counter.out_count = 0
+
+                            processor.counter.events.clear()
+
+
+                        await websocket.send_json({
+
+                            "type": "status",
+
+                            "status": "reset",
+
+                            "message":
+                                "Counts reset"
+
+                        })
+
+
+                except json.JSONDecodeError:
+
+                    logger.warning(
+                        "Invalid JSON received from phone"
+                    )
+
 
     except WebSocketDisconnect:
-        logger.info("Phone camera disconnected")
+
+        logger.info(
+            "Phone camera disconnected"
+        )
+
+
+    except asyncio.CancelledError:
+
+        logger.info(
+            "Phone stream cancelled"
+        )
+
+
     except Exception as exc:
-        logger.exception("Phone stream error: %s", exc)
+
+        logger.exception(
+            "Phone stream error: %s",
+            exc
+        )
+
+        try:
+
+            await websocket.send_json({
+
+                "type": "error",
+
+                "message": str(exc)
+
+            })
+
+        except Exception:
+            pass
+
+
     finally:
-        if processor is not None:
+
+        # ---------------------------------------------------------
+        # STOP RESULT SENDER
+        # ---------------------------------------------------------
+
+        if sender_task is not None:
+
+            sender_task.cancel()
+
+            try:
+
+                await sender_task
+
+            except asyncio.CancelledError:
+                pass
+
+            except Exception:
+                pass
+
+
+        # ---------------------------------------------------------
+        # STOP PHONE PROCESSING
+        # ---------------------------------------------------------
+
+        if (
+            processor is not None
+            and processor.source_mode == "phone"
+        ):
+
             processor.phone_connected = False
 
+            processor.is_running = False
 
+
+        logger.info(
+            "Phone camera session ended"
+        )
+        
 @app.get("/health")
 async def health():
     return {
