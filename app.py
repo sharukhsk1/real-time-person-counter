@@ -213,6 +213,21 @@ class BidirectionalLineCounter:
         self.config.line_position_ratio = ratio
         self.line_x = int(self.frame_width * ratio)
 
+    def reset(self):
+        """Reset counts and per-track crossing state safely."""
+        self.total_count = 0
+        self.in_count = 0
+        self.out_count = 0
+        self.events.clear()
+
+        # Clear tracks completely so no old crossing history can
+        # generate a false event immediately after reset.
+        self.tracks.clear()
+        self.fps_history.clear()
+        self.last_frame_time = time.time()
+
+        logger.info("Counter reset")
+
     def _get_zone(self, x: int) -> Optional[str]:
         dead = self.config.hysteresis_pixels
 
@@ -929,6 +944,37 @@ class VideoProcessor:
     
             return False
 
+    def reset_counts(self):
+        """UI-safe count reset."""
+        if self.counter is not None:
+            self.counter.reset()
+
+    def update_boundary(self, position) -> bool:
+        """
+        Accept boundary as either a ratio (0.5) or percentage (50).
+        The frontend and backend therefore always use the same line.
+        """
+        try:
+            ratio = float(position)
+            if ratio > 1.0:
+                ratio /= 100.0
+
+            ratio = max(0.05, min(0.95, ratio))
+            self.config.line_position_ratio = ratio
+
+            if self.counter is not None:
+                self.counter.set_line_ratio(ratio)
+
+            logger.info(
+                "Boundary updated to %.1f%%",
+                ratio * 100.0,
+            )
+            return True
+
+        except (TypeError, ValueError) as exc:
+            logger.warning("Invalid boundary value %r: %s", position, exc)
+            return False
+
     def start_capture(self, source: str = "0"):
         self._open_capture(source)
 
@@ -990,7 +1036,8 @@ class VideoProcessor:
                     await asyncio.sleep(0.005)
                     continue
 
-                self.phone_processed_seq = seq
+                # Do not mark this sequence as processed yet.
+                # The sender must only see it after YOLO + counter finish.
 
             else:
                 if self.cap is None or not self.cap.isOpened():
@@ -1036,10 +1083,17 @@ class VideoProcessor:
                 with self.lock:
                     self.processed_frame = annotated
 
+                # Mark browser/phone frame complete only AFTER inference.
+                if self.source_mode in ("phone", "browser_webcam"):
+                    self.phone_processed_seq = seq
+
             except Exception as exc:
                 logger.exception("Frame processing error: %s", exc)
                 with self.lock:
                     self.processed_frame = frame
+
+                if self.source_mode in ("phone", "browser_webcam"):
+                    self.phone_processed_seq = seq
 
             await asyncio.sleep(0)
 
@@ -1964,11 +2018,63 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif action == "update_boundary":
 
                     if processor is not None:
-
                         boundary = data.get("boundary")
+                        if boundary is None:
+                            boundary = data.get("line_position")
 
                         if boundary is not None:
                             processor.update_boundary(boundary)
+
+                        await websocket.send_json({
+                            "type": "stats",
+                            "stats": processor.get_stats()
+                        })
+
+                # ------------------------------------------------------
+                # CONFIG UPDATE (supports updated frontend)
+                # ------------------------------------------------------
+                elif action == "config":
+
+                    if processor is not None:
+                        cfg = data.get("config", data)
+
+                        boundary = cfg.get(
+                            "line_position",
+                            cfg.get("boundary")
+                        )
+                        if boundary is not None:
+                            processor.update_boundary(boundary)
+
+                        if "conf_threshold" in cfg:
+                            try:
+                                processor.config.conf_threshold = max(
+                                    0.05,
+                                    min(0.95, float(cfg["conf_threshold"]))
+                                )
+                            except (TypeError, ValueError):
+                                pass
+
+                        if "hysteresis" in cfg:
+                            try:
+                                processor.config.hysteresis_pixels = max(
+                                    10,
+                                    min(150, int(cfg["hysteresis"]))
+                                )
+                            except (TypeError, ValueError):
+                                pass
+
+                        if "show_masks" in cfg:
+                            processor.config.show_masks = bool(cfg["show_masks"])
+
+                        if "show_track_ids" in cfg:
+                            processor.config.show_track_ids = bool(
+                                cfg["show_track_ids"]
+                            )
+
+                        await websocket.send_json({
+                            "type": "config_updated",
+                            "stats": processor.get_stats()
+                        })
 
                 # ------------------------------------------------------
                 # GET CURRENT STATS
