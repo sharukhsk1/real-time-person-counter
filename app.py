@@ -23,6 +23,8 @@ import asyncio
 import base64
 import json
 import logging
+import os
+import platform
 import socket
 import threading
 import time
@@ -737,6 +739,15 @@ class VideoProcessor:
         logger.info("YOLO segmentation model loaded successfully")
 
     def _open_capture(self, source: str):
+        """Open a server-side video source safely.
+
+        Important deployment behaviour:
+        A Render/Railway/container server does not have access to the webcam
+        attached to the visitor's laptop. Numeric sources (0, 1, ...) are
+        therefore valid only when a physical camera is attached to the machine
+        running this Python process. Browser/phone cameras must send frames via
+        /phone-stream.
+        """
         if source is None or str(source).strip() == "":
             source = "0"
 
@@ -745,6 +756,17 @@ class VideoProcessor:
 
         # Stop old camera safely.
         self.stop_capture()
+
+        # Avoid noisy OpenCV/FFMPEG warnings on cloud Linux containers that
+        # have no /dev/video devices at all.
+        if isinstance(actual_source, int) and not os_name_is_windows():
+            camera_path = Path(f"/dev/video{actual_source}")
+            if not camera_path.exists():
+                raise RuntimeError(
+                    f"Server camera index {actual_source} is unavailable on this deployment. "
+                    "A deployed server cannot access your laptop webcam directly. "
+                    "Use Phone Camera (QR) for browser/mobile streaming, or provide an RTSP/IP camera URL or video file."
+                )
 
         if isinstance(actual_source, int) and os_name_is_windows():
             cap = cv2.VideoCapture(actual_source, cv2.CAP_DSHOW)
@@ -996,8 +1018,17 @@ class VideoProcessor:
 
 
 def os_name_is_windows() -> bool:
-    import os
     return os.name == "nt"
+
+
+def running_in_cloud_container() -> bool:
+    """Best-effort helper for diagnostics only."""
+    return bool(
+        os.environ.get("RENDER")
+        or os.environ.get("RAILWAY_ENVIRONMENT")
+        or os.environ.get("KUBERNETES_SERVICE_HOST")
+        or platform.system().lower() == "linux" and not any(Path("/dev").glob("video*"))
+    )
 
 
 # =============================================================================
@@ -1578,6 +1609,7 @@ async def health():
         "source": processor.last_source if processor else None,
         "error": processor.model_error if processor else None,
         "phone_connected": processor.phone_connected if processor else False,
+        "server_has_local_camera": any(Path("/dev").glob("video*")) if not os_name_is_windows() else True,
     }
 
 
@@ -1676,6 +1708,19 @@ async def websocket_endpoint(websocket: WebSocket):
                     source = str(data.get("source", "0")).strip()
 
                     try:
+                        # A phone source is handled by /phone-stream. Do not try
+                        # to open it as an OpenCV device index on the server.
+                        if source == "__PHONE_CAMERA__":
+                            await websocket.send_json(
+                                {
+                                    "type": "status",
+                                    "status": "waiting_for_phone",
+                                    "source": source,
+                                    "message": "Waiting for the phone camera to connect.",
+                                }
+                            )
+                            continue
+
                         # Stop existing stream/task.
                         processor.stop()
 
@@ -1684,6 +1729,12 @@ async def websocket_endpoint(websocket: WebSocket):
                             and not processor.processing_task.done()
                         ):
                             processor.processing_task.cancel()
+                            try:
+                                await processor.processing_task
+                            except asyncio.CancelledError:
+                                pass
+                            except Exception:
+                                pass
 
                         processor.start_capture(source)
 
