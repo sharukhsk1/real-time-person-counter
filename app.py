@@ -811,16 +811,19 @@ class VideoProcessor:
 
         logger.info("Source started: %s (%sx%s)", source, fw, fh)
 
-    def start_phone_capture(self):
+    def start_browser_capture(self, mode: str = "phone"):
+        """Prepare the existing single-model processor for browser camera frames.
+
+        mode is either ``phone`` or ``browser_webcam``. Frames always arrive
+        over WebSocket; no server-side cv2.VideoCapture(0) is used for a
+        visitor's camera.
         """
-        Prepare the existing single-model processor to receive frames
-        from the phone browser camera.
-        """
+        mode = "browser_webcam" if mode == "browser_webcam" else "phone"
 
         # Stop only the previous capture source.
         self.stop_capture()
 
-        self.source_mode = "phone"
+        self.source_mode = mode
 
         # Reset phone frame state.
         self.phone_frame = None
@@ -840,7 +843,15 @@ class VideoProcessor:
         self.last_source = "PHONE_CAMERA"
         self.is_running = True
 
-        logger.info("Phone camera source prepared")
+        logger.info("Browser camera source prepared: %s", mode)
+
+    def start_phone_capture(self):
+        """Backward-compatible phone wrapper."""
+        self.start_browser_capture("phone")
+
+    def start_webcam_capture(self):
+        """Start a desktop browser webcam session without server VideoCapture."""
+        self.start_browser_capture("browser_webcam")
 
     def submit_phone_jpeg(self, jpeg_bytes: bytes) -> bool:
         """Receive one JPEG frame from the phone without creating another model."""
@@ -912,7 +923,7 @@ class VideoProcessor:
             # -------------------------------------------------------------
             # Get next frame from either OpenCV capture or phone WebSocket.
             # -------------------------------------------------------------
-            if self.source_mode == "phone":
+            if self.source_mode in ("phone", "browser_webcam"):
                 with self.lock:
                     seq = self.phone_frame_seq
                     frame = (
@@ -1184,6 +1195,12 @@ async def phone_stream_endpoint(websocket: WebSocket):
 
     await websocket.accept()
 
+    # Same endpoint supports both phone and desktop browser cameras.
+    # /phone-stream?mode=phone          -> mobile camera
+    # /phone-stream?mode=browser_webcam -> desktop/laptop webcam
+    requested_mode = websocket.query_params.get("mode", "phone").strip().lower()
+    camera_mode = "browser_webcam" if requested_mode in ("browser_webcam", "webcam", "desktop") else "phone"
+
     global processor
 
     sender_task = None
@@ -1204,7 +1221,7 @@ async def phone_stream_endpoint(websocket: WebSocket):
                 if (
                     processor is not None
                     and processor.is_running
-                    and processor.source_mode == "phone"
+                    and processor.source_mode == camera_mode
                     and processor.phone_connected
                 ):
 
@@ -1305,7 +1322,7 @@ async def phone_stream_endpoint(websocket: WebSocket):
         # START PHONE CAPTURE
         # ---------------------------------------------------------
 
-        processor.start_phone_capture()
+        processor.start_browser_capture(camera_mode)
 
 
         # Existing processing pipeline.
@@ -1328,7 +1345,7 @@ async def phone_stream_endpoint(websocket: WebSocket):
             "status": "connected",
 
             "message":
-                "Phone camera connected to Vision Counter"
+                f"{'Desktop webcam' if camera_mode == 'browser_webcam' else 'Phone camera'} connected to Vision Counter"
 
         })
 
@@ -1710,13 +1727,13 @@ async def websocket_endpoint(websocket: WebSocket):
                     try:
                         # A phone source is handled by /phone-stream. Do not try
                         # to open it as an OpenCV device index on the server.
-                        if source == "__PHONE_CAMERA__":
+                        if source in ("__PHONE_CAMERA__", "__BROWSER_CAMERA__"):
                             await websocket.send_json(
                                 {
                                     "type": "status",
-                                    "status": "waiting_for_phone",
+                                    "status": "waiting_for_browser_camera",
                                     "source": source,
-                                    "message": "Waiting for the phone camera to connect.",
+                                    "message": "Waiting for the browser camera to connect.",
                                 }
                             )
                             continue
