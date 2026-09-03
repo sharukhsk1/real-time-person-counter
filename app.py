@@ -812,68 +812,122 @@ class VideoProcessor:
         logger.info("Source started: %s (%sx%s)", source, fw, fh)
 
     def start_browser_capture(self, mode: str = "phone"):
-        """Prepare the existing single-model processor for browser camera frames.
-
-        mode is either ``phone`` or ``browser_webcam``. Frames always arrive
-        over WebSocket; no server-side cv2.VideoCapture(0) is used for a
-        visitor's camera.
         """
-        mode = "browser_webcam" if mode == "browser_webcam" else "phone"
-
-        # Stop only the previous capture source.
+        Prepare the existing single YOLO processor for browser camera frames.
+    
+        Supported modes:
+        - phone
+        - browser_webcam
+    
+        Frames arrive through WebSocket.
+        No server-side cv2.VideoCapture() is used.
+        """
+    
+        mode = (
+            "browser_webcam"
+            if mode == "browser_webcam"
+            else "phone"
+        )
+    
+        # Stop previous server-side capture safely.
         self.stop_capture()
-
+    
         self.source_mode = mode
-
-        # Reset phone frame state.
+    
+        # Reset incoming browser frame state.
         self.phone_frame = None
         self.phone_frame_seq = 0
         self.phone_processed_seq = -1
-
-        # IMPORTANT:
-        # Phone dimensions may be different from webcam/CCTV dimensions.
-        # Counter will be recreated automatically when the first phone
-        # frame arrives.
+    
+        # Browser camera can have a different resolution.
+        # Recreate the counter when the first frame arrives.
         self.counter = None
-
+    
         with self.lock:
             self.processed_frame = None
-
+    
         self.phone_connected = True
-        self.last_source = "PHONE_CAMERA"
         self.is_running = True
-
-        logger.info("Browser camera source prepared: %s", mode)
-
+    
+        if mode == "browser_webcam":
+            self.last_source = "BROWSER_WEBCAM"
+        else:
+            self.last_source = "PHONE_CAMERA"
+    
+        logger.info(
+            "Browser camera source prepared: %s",
+            mode
+        )
+    
+    
     def start_phone_capture(self):
-        """Backward-compatible phone wrapper."""
+        """Prepare phone browser camera streaming."""
         self.start_browser_capture("phone")
-
+    
+    
     def start_webcam_capture(self):
-        """Start a desktop browser webcam session without server VideoCapture."""
+        """Prepare desktop browser webcam streaming."""
         self.start_browser_capture("browser_webcam")
 
     def submit_phone_jpeg(self, jpeg_bytes: bytes) -> bool:
-        """Receive one JPEG frame from the phone without creating another model."""
-        array = np.frombuffer(jpeg_bytes, dtype=np.uint8)
-        frame = cv2.imdecode(array, cv2.IMREAD_COLOR)
-        if frame is None:
+        """
+        Receive one JPEG frame from a browser camera.
+    
+        Used by:
+        - Phone camera
+        - Desktop browser webcam
+    
+        The SAME single YOLO model processes all frames.
+        """
+    
+        try:
+            array = np.frombuffer(
+                jpeg_bytes,
+                dtype=np.uint8
+            )
+    
+            frame = cv2.imdecode(
+                array,
+                cv2.IMREAD_COLOR
+            )
+    
+            if frame is None:
+                return False
+    
+            frame = self._resize_frame(frame)
+    
+            with self.lock:
+    
+                # Keep only the newest frame.
+                # This prevents latency buildup.
+                self.phone_frame = frame
+                self.phone_frame_seq += 1
+    
+                # Initialize counter based on actual camera dimensions.
+                if self.counter is None:
+    
+                    fh, fw = frame.shape[:2]
+    
+                    self.counter = BidirectionalLineCounter(
+                        self.config,
+                        fw,
+                        fh,
+                    )
+    
+                    self.processed_frame = frame.copy()
+    
+            self.phone_connected = True
+    
+            return True
+    
+        except Exception as exc:
+    
+            logger.warning(
+                "Failed to decode browser camera frame: %s",
+                exc,
+            )
+    
             return False
-
-        frame = self._resize_frame(frame)
-
-        with self.lock:
-            self.phone_frame = frame
-            self.phone_frame_seq += 1
-
-            # Create the same counter when the first phone frame defines dimensions.
-            if self.counter is None:
-                fh, fw = frame.shape[:2]
-                self.counter = BidirectionalLineCounter(self.config, fw, fh)
-                self.processed_frame = frame.copy()
-
-        self.phone_connected = True
-        return True
 
     def start_capture(self, source: str = "0"):
         self._open_capture(source)
@@ -1600,14 +1654,11 @@ async def phone_stream_endpoint(websocket: WebSocket):
         # ---------------------------------------------------------
         # STOP PHONE PROCESSING
         # ---------------------------------------------------------
-
         if (
             processor is not None
-            and processor.source_mode == "phone"
+            and processor.source_mode in ("phone", "browser_webcam")
         ):
-
             processor.phone_connected = False
-
             processor.is_running = False
 
 
@@ -1682,239 +1733,327 @@ async def websocket_endpoint(websocket: WebSocket):
 
     global processor
 
+    sender_task = None
+
+    async def send_results_to_browser():
+        """
+        Dedicated sender for processed browser webcam frames.
+
+        Frame receiving and YOLO inference are asynchronous, so this task
+        continuously checks for newly processed frames and sends them back
+        without blocking incoming camera frames.
+        """
+        last_sent_frame_seq = -1
+
+        try:
+            while True:
+
+                if (
+                    processor is not None
+                    and processor.is_running
+                    and processor.source_mode == "browser_webcam"
+                    and processor.phone_connected
+                ):
+                    current_seq = processor.phone_processed_seq
+
+                    if (
+                        current_seq >= 0
+                        and current_seq != last_sent_frame_seq
+                        and processor.processed_frame is not None
+                    ):
+                        jpeg = processor.get_frame_jpeg()
+
+                        if jpeg:
+                            stats = processor.get_stats()
+
+                            await websocket.send_json({
+                                "type": "frame",
+                                "image": base64.b64encode(
+                                    jpeg
+                                ).decode("utf-8"),
+                                "stats": stats,
+                                "events": stats.get("events", [])
+                            })
+
+                            last_sent_frame_seq = current_seq
+
+                # Small delay prevents unnecessary CPU usage
+                await asyncio.sleep(0.03)
+
+        except asyncio.CancelledError:
+            pass
+
+        except WebSocketDisconnect:
+            pass
+
+        except Exception as exc:
+            logger.debug(
+                "Browser result sender stopped: %s",
+                exc
+            )
+
     try:
         while True:
-            # -------------------------------------------------------------
-            # Read control messages without blocking frame streaming.
-            # -------------------------------------------------------------
-            try:
-                raw = await asyncio.wait_for(
-                    websocket.receive_text(),
-                    timeout=0.01,
-                )
 
-                data = json.loads(raw)
+            # IMPORTANT:
+            # receive() supports BOTH text messages and binary JPEG frames.
+            # Do NOT use receive_text() here.
+            message = await websocket.receive()
+
+            # ----------------------------------------------------------
+            # WEBSOCKET DISCONNECT
+            # ----------------------------------------------------------
+            if message.get("type") == "websocket.disconnect":
+                break
+
+            # ----------------------------------------------------------
+            # TEXT / JSON CONTROL MESSAGE
+            # ----------------------------------------------------------
+            if message.get("text") is not None:
+
+                try:
+                    data = json.loads(message["text"])
+                except json.JSONDecodeError:
+                    logger.warning("Invalid WebSocket JSON received")
+                    continue
+
                 action = data.get("action")
 
-                # ---------------------------------------------------------
-                # START
-                # ---------------------------------------------------------
+                # ------------------------------------------------------
+                # START SOURCE
+                # ------------------------------------------------------
                 if action == "start":
-                    if processor is None:
-                        await websocket.send_json(
-                            {
-                                "type": "error",
-                                "message": "Processor is not initialized.",
-                            }
-                        )
+                
+                    source = data.get("source")
+                
+                    if source is None:
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": "No video source provided."
+                        })
                         continue
-
-                    if not processor.model_loaded:
+                
+                    # ======================================================
+                    # CLEAN UP PREVIOUS SOURCE AND TASKS
+                    # ======================================================
+                
+                    # Stop previous browser result sender
+                    if sender_task is not None and not sender_task.done():
+                
+                        sender_task.cancel()
+                
                         try:
-                            processor.load_model()
-                        except Exception as exc:
-                            processor.model_error = str(exc)
-                            await websocket.send_json(
-                                {
-                                    "type": "error",
-                                    "message": str(exc),
-                                }
-                            )
-                            continue
-
-                    source = str(data.get("source", "0")).strip()
-
-                    try:
-                        # A phone source is handled by /phone-stream. Do not try
-                        # to open it as an OpenCV device index on the server.
-                        if source in ("__PHONE_CAMERA__", "__BROWSER_CAMERA__"):
-                            await websocket.send_json(
-                                {
-                                    "type": "status",
-                                    "status": "waiting_for_browser_camera",
-                                    "source": source,
-                                    "message": "Waiting for the browser camera to connect.",
-                                }
-                            )
-                            continue
-
-                        # Stop existing stream/task.
-                        processor.stop()
-
+                            await sender_task
+                        except asyncio.CancelledError:
+                            pass
+                        except Exception:
+                            pass
+                
+                        sender_task = None
+                
+                
+                    # Stop previous capture and processing task
+                    if processor is not None:
+                
+                        processor.stop_capture()
+                
                         if (
                             processor.processing_task is not None
                             and not processor.processing_task.done()
                         ):
+                
                             processor.processing_task.cancel()
+                
                             try:
                                 await processor.processing_task
                             except asyncio.CancelledError:
                                 pass
                             except Exception:
                                 pass
-
-                        processor.start_capture(source)
-
-                        processor.processing_task = asyncio.create_task(
-                            processor.process_frames()
-                        )
-
-                        await websocket.send_json(
-                            {
-                                "type": "status",
-                                "status": "started",
-                                "source": source,
-                                "message": "Live people counter started.",
-                            }
-                        )
-
-                    except Exception as exc:
-                        logger.exception("Could not start source")
-                        await websocket.send_json(
-                            {
-                                "type": "error",
-                                "message": str(exc),
-                            }
-                        )
-
-                # ---------------------------------------------------------
-                # STOP
-                # ---------------------------------------------------------
-                elif action == "stop":
-                    if processor is not None:
-                        processor.stop()
-
-                    await websocket.send_json(
-                        {
-                            "type": "status",
-                            "status": "stopped",
-                            "message": "Stream stopped.",
-                        }
-                    )
-
-                # ---------------------------------------------------------
-                # LIVE CONFIGURATION
-                # ---------------------------------------------------------
-                elif action == "config":
-                    cfg = data.get("config", {})
-
-                    if "line_position" in cfg:
-                        ratio = float(cfg["line_position"])
-                        ratio = (
-                            ratio / 100.0
-                            if ratio > 1
-                            else ratio
-                        )
-                        ratio = max(0.05, min(0.95, ratio))
-                        config.line_position_ratio = ratio
-
+                
+                            processor.processing_task = None
+                
+                
+                    # ==================================================
+                    # BROWSER WEBCAM
+                    # ==================================================
+                
+                    if source in (
+                        "__BROWSER_WEBCAM__",
+                        "__BROWSER_CAMERA__",
+                        "__WEB_BROWSER_CAMERA__",
+                    ):
+                
+                        processor.start_webcam_capture()
+                
                         if (
-                            processor is not None
-                            and processor.counter is not None
+                            processor.processing_task is None
+                            or processor.processing_task.done()
                         ):
-                            processor.counter.set_line_ratio(ratio)
-
-                    if "conf_threshold" in cfg:
-                        config.conf_threshold = max(
-                            0.10,
-                            min(
-                                0.95,
-                                float(cfg["conf_threshold"]),
-                            ),
-                        )
-
-                    if "hysteresis" in cfg:
-                        config.hysteresis_pixels = max(
-                            10,
-                            min(
-                                150,
-                                int(cfg["hysteresis"]),
-                            ),
-                        )
-
-                    if "show_masks" in cfg:
-                        config.show_masks = bool(cfg["show_masks"])
-
-                    if "show_track_ids" in cfg:
-                        config.show_track_ids = bool(
-                            cfg["show_track_ids"]
-                        )
-
-                    await websocket.send_json(
-                        {
-                            "type": "config_updated",
-                            "stats": (
-                                processor.get_stats()
-                                if processor
-                                else {}
-                            ),
-                        }
-                    )
-
-                # ---------------------------------------------------------
-                # RESET COUNTS
-                # ---------------------------------------------------------
-                elif action == "reset":
-                    if processor and processor.counter:
-                        processor.counter.total_count = 0
-                        processor.counter.in_count = 0
-                        processor.counter.out_count = 0
-                        processor.counter.events.clear()
-
-                    await websocket.send_json(
-                        {
+                            processor.processing_task = asyncio.create_task(
+                                processor.process_frames()
+                            )
+                
+                        if (
+                            sender_task is None
+                            or sender_task.done()
+                        ):
+                            sender_task = asyncio.create_task(
+                                send_results_to_browser()
+                            )
+                
+                        await websocket.send_json({
                             "type": "status",
-                            "status": "reset",
-                            "message": "Counts reset.",
-                        }
-                    )
+                            "message": "Browser webcam started",
+                            "source": "browser_webcam"
+                        })
+                
+                        logger.info("Browser webcam source prepared")
+                
+                    # ==================================================
+                    # NORMAL SOURCES
+                    # ==================================================
+                    else:
+                
+                        processor.start_capture(source)
+                
+                        if (
+                            processor.processing_task is None
+                            or processor.processing_task.done()
+                        ):
+                            processor.processing_task = asyncio.create_task(
+                                processor.process_frames()
+                            )
+                
+                        await websocket.send_json({
+                            "type": "status",
+                            "message": "Video source started"
+                        })
 
-            except asyncio.TimeoutError:
-                pass
-            except json.JSONDecodeError:
-                await websocket.send_json(
-                    {
-                        "type": "error",
-                        "message": "Invalid WebSocket message.",
-                    }
-                )
+                # ------------------------------------------------------
+                # STOP SOURCE
+                # ------------------------------------------------------
+                elif action == "stop":
 
-            # -------------------------------------------------------------
-            # STREAM FRAME + STATS
-            # -------------------------------------------------------------
-            if (
-                processor is not None
-                and processor.is_running
-            ):
-                jpeg = processor.get_frame_jpeg()
+                    if processor is not None:
+                        processor.stop_capture()
 
-                if jpeg:
-                    await websocket.send_json(
-                        {
-                            "type": "frame",
-                            "image": base64.b64encode(jpeg).decode(
-                                "utf-8"
-                            ),
-                            "stats": processor.get_stats(),
-                        }
-                    )
+                    await websocket.send_json({
+                        "type": "status",
+                        "message": "Video source stopped"
+                    })
 
-            await asyncio.sleep(0.03)
+                # ------------------------------------------------------
+                # RESET COUNTS
+                # ------------------------------------------------------
+                elif action == "reset":
+
+                    if processor is not None:
+                        processor.reset_counts()
+
+                    await websocket.send_json({
+                        "type": "stats",
+                        "stats": processor.get_stats()
+                        if processor is not None
+                        else {}
+                    })
+
+                # ------------------------------------------------------
+                # UPDATE BOUNDARY
+                # ------------------------------------------------------
+                elif action == "update_boundary":
+
+                    if processor is not None:
+
+                        boundary = data.get("boundary")
+
+                        if boundary is not None:
+                            processor.update_boundary(boundary)
+
+                # ------------------------------------------------------
+                # GET CURRENT STATS
+                # ------------------------------------------------------
+                elif action == "get_stats":
+
+                    if processor is not None:
+                        await websocket.send_json({
+                            "type": "stats",
+                            "stats": processor.get_stats()
+                        })
+
+                continue
+
+            # ----------------------------------------------------------
+            # BINARY JPEG FRAME FROM BROWSER WEBCAM
+            # ----------------------------------------------------------
+            if message.get("bytes") is not None:
+
+                frame_bytes = message["bytes"]
+
+                if not frame_bytes:
+                    continue
+
+                if processor is None:
+                    continue
+
+                # Only accept browser frames when browser webcam
+                # is the active source.
+                if processor.source_mode != "browser_webcam":
+                    continue
+
+                # Submit newest frame.
+                # process_frames() handles YOLO asynchronously.
+                processor.submit_phone_jpeg(frame_bytes)
+
+                # Do NOT wait for YOLO here.
+                # send_results_to_browser() sends completed results.
+                continue
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
 
     except Exception as exc:
-        logger.exception("WebSocket error: %s", exc)
+        logger.exception(
+            "WebSocket error: %s",
+            exc
+        )
+
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "message": str(exc)
+            })
+        except Exception:
+            pass
 
     finally:
-        # Do not automatically stop the processor here; reconnecting the UI
-        # should not unnecessarily kill a camera stream.
-        pass
 
+        # ----------------------------------------------------------
+        # STOP DEDICATED BROWSER RESULT SENDER
+        # ----------------------------------------------------------
+        if sender_task is not None:
+            sender_task.cancel()
 
-# =============================================================================
-# RUN
+            try:
+                await sender_task
+            except asyncio.CancelledError:
+                pass
+            except Exception:
+                pass
+
+        # ----------------------------------------------------------
+        # CLEAN UP BROWSER CAMERA
+        # ----------------------------------------------------------
+        if (
+            processor is not None
+            and processor.source_mode == "browser_webcam"
+        ):
+            try:
+                processor.stop_capture()
+            except Exception:
+                pass
+
+        logger.info("WebSocket connection closed")
 # =============================================================================
 
 if __name__ == "__main__":
