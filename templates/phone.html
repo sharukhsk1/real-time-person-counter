@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#08111d">
 
 <title>Vision Counter · Mobile</title>
@@ -16,37 +11,27 @@
 :root{
     --bg:#08111d;
     --panel:#101b2a;
-    --panel2:#142235;
+    --panel2:#132235;
     --border:#26394f;
     --text:#edf5ff;
-    --muted:#9aa9bb;
+    --muted:#93a4b8;
     --cyan:#2dd4e7;
     --blue:#2589ee;
     --green:#36e39a;
-    --yellow:#ffd84d;
     --red:#ff637e;
+    --yellow:#f5c451;
 }
 
 *{
     box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
 }
 
-html,
-body{
+html,body{
     margin:0;
-    width:100%;
     min-height:100%;
     background:var(--bg);
     color:var(--text);
-    font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Arial,
-        sans-serif;
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
 body{
@@ -55,49 +40,32 @@ body{
 
 .app{
     width:100%;
-    min-height:100svh;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-
+    max-width:760px;
+    margin:0 auto;
     padding:
         max(14px, env(safe-area-inset-top))
         14px
-        max(16px, env(safe-area-inset-bottom));
+        max(24px, env(safe-area-inset-bottom));
 }
 
-/* =========================
-   HEADER
-========================= */
+/* ================= HEADER ================= */
 
 .header{
     display:flex;
-    align-items:center;
     justify-content:space-between;
-    gap:10px;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
 }
 
 .brand{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-}
-
-.brand-title{
-    font-size:18px;
+    font-size:19px;
     font-weight:800;
     letter-spacing:-.4px;
 }
 
-.brand-title b{
+.brand b{
     color:var(--cyan);
-}
-
-.brand-sub{
-    font-size:10px;
-    color:var(--muted);
-    letter-spacing:.8px;
-    text-transform:uppercase;
 }
 
 .status{
@@ -113,520 +81,455 @@ body{
     width:9px;
     height:9px;
     border-radius:50%;
-    background:#65758a;
-    flex:none;
+    background:#64748b;
 }
 
 .dot.on{
     background:var(--green);
-    box-shadow:0 0 12px rgba(54,227,154,.8);
+    box-shadow:0 0 12px rgba(54,227,154,.9);
 }
 
 .dot.error{
     background:var(--red);
-    box-shadow:0 0 12px rgba(255,99,126,.7);
 }
 
-/* =========================
-   CAMERA
-========================= */
+/* ================= COUNTERS ================= */
 
-.camera-wrap{
-    position:relative;
-    width:100%;
-    aspect-ratio:9/16;
+.count-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:9px;
+    margin-bottom:14px;
+}
 
-    max-height:68svh;
+.count-card{
+    background:linear-gradient(145deg,var(--panel),#0c1725);
+    border:1px solid var(--border);
+    border-radius:15px;
+    padding:12px 8px;
+    text-align:center;
+}
 
+.count-value{
+    font-size:26px;
+    font-weight:800;
+    line-height:1;
+    margin-bottom:7px;
+}
+
+.count-label{
+    font-size:10px;
+    color:var(--muted);
+    font-weight:700;
+    letter-spacing:.6px;
+}
+
+.in-value{color:var(--green);}
+.out-value{color:var(--red);}
+.active-value{color:var(--cyan);}
+
+/* ================= CAMERA ================= */
+
+.camera-card{
     background:#020407;
     border:1px solid var(--border);
-    border-radius:22px;
+    border-radius:18px;
     overflow:hidden;
-
-    box-shadow:
-        0 16px 45px rgba(0,0,0,.35);
+    position:relative;
+    box-shadow:0 15px 40px rgba(0,0,0,.3);
 }
 
-#rawVideo,
-#processedFrame{
+.camera{
+    width:100%;
+    aspect-ratio:9 / 14;
+    max-height:72vh;
+    position:relative;
+    background:#020407;
+    overflow:hidden;
+}
+
+.camera video,
+.camera img{
     position:absolute;
     inset:0;
-
     width:100%;
     height:100%;
-
     object-fit:cover;
 }
 
-/* Raw camera stays hidden after processed stream starts */
-
-#rawVideo{
-    background:#020407;
+.camera video{
+    z-index:1;
 }
 
-#processedFrame{
+.camera img{
+    z-index:2;
     display:none;
-    background:#020407;
 }
 
-.camera-wrap.processed #rawVideo{
-    opacity:0;
-}
-
-.camera-wrap.processed #processedFrame{
+/*
+Processed backend frame contains:
+- segmentation masks
+- track IDs
+- boundary line
+- zones
+- arrows
+*/
+.camera.processed img{
     display:block;
 }
 
-/* Front camera mirror */
-
-.camera-wrap.front #rawVideo,
-.camera-wrap.front #processedFrame{
-    transform:scaleX(-1);
+.camera.processed video{
+    opacity:0;
 }
 
-/* =========================
-   CAMERA BADGES
-========================= */
+/* LIVE BADGE */
 
 .live-badge{
     position:absolute;
-    z-index:20;
-
+    z-index:10;
     top:12px;
     left:12px;
-
     display:flex;
     align-items:center;
     gap:7px;
-
     padding:7px 10px;
-
     border-radius:999px;
-
-    background:rgba(4,10,16,.76);
-    backdrop-filter:blur(10px);
-
-    border:1px solid rgba(255,255,255,.13);
-
     font-size:10px;
-    font-weight:800;
     letter-spacing:1px;
+    font-weight:800;
+    background:rgba(4,10,16,.78);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.12);
 }
 
-.live-dot{
+.live-indicator{
     width:7px;
     height:7px;
     border-radius:50%;
     background:var(--red);
 }
 
-.live-dot.active{
+.live-indicator.on{
     background:var(--green);
-    box-shadow:0 0 10px rgba(54,227,154,.9);
+    box-shadow:0 0 10px var(--green);
 }
 
-.ai-badge{
-    position:absolute;
-    z-index:20;
+/* WAITING OVERLAY */
 
-    top:12px;
-    right:12px;
-
-    padding:7px 10px;
-
-    border-radius:999px;
-
-    background:rgba(4,10,16,.76);
-    backdrop-filter:blur(10px);
-
-    border:1px solid rgba(255,255,255,.13);
-
-    font-size:9px;
-    color:var(--cyan);
-    font-weight:800;
-    letter-spacing:.8px;
-}
-
-/* =========================
-   BOUNDARY LINE
-========================= */
-
-.boundary-line{
-    position:absolute;
-    z-index:30;
-
-    left:5%;
-    width:90%;
-
-    top:50%;
-
-    height:4px;
-
-    background:var(--yellow);
-
-    border-radius:999px;
-
-    box-shadow:
-        0 0 10px rgba(255,216,77,.8),
-        0 0 20px rgba(255,216,77,.4);
-
-    cursor:ns-resize;
-
-    touch-action:none;
-
-    transition:none;
-}
-
-.boundary-line::before,
-.boundary-line::after{
-    content:"";
-
-    position:absolute;
-
-    top:50%;
-
-    width:14px;
-    height:14px;
-
-    border-radius:50%;
-
-    background:var(--yellow);
-
-    transform:translateY(-50%);
-
-    box-shadow:0 0 10px rgba(255,216,77,.8);
-}
-
-.boundary-line::before{
-    left:-5px;
-}
-
-.boundary-line::after{
-    right:-5px;
-}
-
-.boundary-label{
-    position:absolute;
-
-    right:0;
-    bottom:10px;
-
-    padding:5px 8px;
-
-    border-radius:7px;
-
-    background:rgba(0,0,0,.7);
-
-    color:#fff4b0;
-
-    font-size:9px;
-    font-weight:800;
-
-    letter-spacing:.5px;
-}
-
-/* =========================
-   CAMERA PLACEHOLDER
-========================= */
-
-.camera-placeholder{
+.waiting{
     position:absolute;
     inset:0;
-
+    z-index:5;
     display:flex;
     flex-direction:column;
-
     align-items:center;
     justify-content:center;
-
-    gap:12px;
-
+    gap:10px;
     color:var(--muted);
-
+    background:linear-gradient(
+        rgba(2,4,7,.25),
+        rgba(2,4,7,.65)
+    );
     text-align:center;
-
     padding:30px;
-
-    background:
-        radial-gradient(
-            circle at center,
-            rgba(45,212,231,.06),
-            transparent 60%
-        );
 }
 
-.camera-placeholder.hidden{
+.waiting.hidden{
     display:none;
 }
 
-.camera-icon{
-    width:60px;
-    height:60px;
-
-    display:grid;
-    place-items:center;
-
-    border-radius:18px;
-
-    background:var(--panel);
-
-    border:1px solid var(--border);
-
-    font-size:27px;
+.loader{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    border:3px solid rgba(255,255,255,.15);
+    border-top-color:var(--cyan);
+    animation:spin .8s linear infinite;
 }
 
-.camera-placeholder strong{
-    color:var(--text);
-    font-size:15px;
+@keyframes spin{
+    to{transform:rotate(360deg);}
 }
 
-.camera-placeholder span{
-    font-size:12px;
-    line-height:1.5;
-    max-width:250px;
-}
-
-/* =========================
-   STATS
-========================= */
-
-.stats{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:9px;
-}
-
-.stat{
-    background:var(--panel);
-
-    border:1px solid var(--border);
-
-    border-radius:15px;
-
-    padding:12px 8px;
-
-    text-align:center;
-}
-
-.stat-value{
-    font-size:23px;
-    font-weight:850;
-    line-height:1.1;
-}
-
-.stat-label{
-    margin-top:5px;
-
-    color:var(--muted);
-
-    font-size:9px;
-
-    text-transform:uppercase;
-
-    letter-spacing:.7px;
-}
-
-.stat.in .stat-value{
-    color:var(--green);
-}
-
-.stat.out .stat-value{
-    color:var(--red);
-}
-
-/* =========================
-   CONTROLS
-========================= */
+/* ================= CONTROLS ================= */
 
 .controls{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:10px;
+    margin:14px 0;
 }
 
 .btn{
-    min-height:54px;
-
-    border-radius:14px;
-
-    border:none;
-
-    padding:12px 10px;
-
+    border:0;
+    border-radius:13px;
+    min-height:52px;
+    padding:12px;
     font-size:14px;
     font-weight:800;
-
     cursor:pointer;
-
-    transition:
-        transform .15s ease,
-        opacity .15s ease;
 }
 
-.btn:active{
-    transform:scale(.97);
+.primary{
+    color:#04131c;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
 }
 
-.btn.primary{
-    color:#06121d;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--cyan),
-            var(--blue)
-        );
-}
-
-.btn.secondary{
+.secondary{
     color:var(--text);
-
-    background:var(--panel2);
-
+    background:#172334;
     border:1px solid #30435a;
 }
 
-.btn:disabled{
-    opacity:.5;
-    cursor:not-allowed;
+.full-btn{
+    width:100%;
 }
 
-/* =========================
-   RECENT EVENTS
-========================= */
+/* ================= SECTION ================= */
 
-.events-panel{
-    background:var(--panel);
-
+.section{
+    background:linear-gradient(
+        145deg,
+        rgba(16,27,42,.96),
+        rgba(11,21,34,.96)
+    );
     border:1px solid var(--border);
-
-    border-radius:16px;
-
-    overflow:hidden;
+    border-radius:17px;
+    padding:15px;
+    margin-top:13px;
 }
 
-.events-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    padding:13px 14px;
-
-    border-bottom:1px solid var(--border);
-}
-
-.events-title{
-    font-size:12px;
+.section-title{
+    font-size:14px;
     font-weight:800;
+    margin-bottom:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
-.events-count{
+/* ================= STATS ================= */
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+
+.stat{
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+    padding:12px;
+}
+
+.stat-value{
+    font-size:21px;
+    font-weight:800;
+    color:var(--cyan);
+}
+
+.stat-label{
+    margin-top:5px;
     font-size:10px;
     color:var(--muted);
 }
 
+.model-card{
+    grid-column:span 2;
+}
+
+/* ================= CONFIG ================= */
+
+.config-item{
+    margin-bottom:18px;
+}
+
+.config-item:last-child{
+    margin-bottom:0;
+}
+
+.config-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+}
+
+.config-label{
+    font-size:12px;
+    font-weight:700;
+}
+
+.config-value{
+    color:var(--cyan);
+    font-size:12px;
+    font-weight:800;
+}
+
+input[type="range"]{
+    width:100%;
+    accent-color:var(--cyan);
+}
+
+.help{
+    margin-top:7px;
+    font-size:10px;
+    color:var(--muted);
+    line-height:1.5;
+}
+
+.info{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    border:1px solid var(--muted);
+    color:var(--muted);
+    font-size:10px;
+    cursor:help;
+    position:relative;
+}
+
+/* Toggle */
+
+.toggle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 0;
+    border-top:1px solid rgba(255,255,255,.06);
+    font-size:12px;
+    font-weight:700;
+}
+
+.switch{
+    position:relative;
+    width:44px;
+    height:24px;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+    border-radius:20px;
+    background:#34465c;
+    transition:.2s;
+}
+
+.slider:before{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    left:3px;
+    top:3px;
+    border-radius:50%;
+    background:white;
+    transition:.2s;
+}
+
+.switch input:checked + .slider{
+    background:var(--cyan);
+}
+
+.switch input:checked + .slider:before{
+    transform:translateX(20px);
+}
+
+/* ================= EVENTS ================= */
+
 .events{
-    max-height:160px;
-
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:280px;
     overflow-y:auto;
-
-    padding:6px;
 }
 
 .event{
     display:flex;
     align-items:center;
-    justify-content:space-between;
-
     gap:10px;
-
-    padding:9px 8px;
-
+    padding:10px;
     border-radius:10px;
-
-    font-size:11px;
+    background:rgba(255,255,255,.025);
+    border:1px solid rgba(255,255,255,.05);
 }
 
-.event + .event{
-    border-top:1px solid rgba(255,255,255,.05);
-}
-
-.event-type{
-    display:flex;
-    align-items:center;
-    gap:8px;
-
-    font-weight:700;
-}
-
-.event-direction{
-    width:7px;
-    height:7px;
-
+.event-dot{
+    width:8px;
+    height:8px;
     border-radius:50%;
+    flex:none;
 }
 
-.event-direction.in{
+.event.in .event-dot{
     background:var(--green);
 }
 
-.event-direction.out{
+.event.out .event-dot{
     background:var(--red);
 }
 
-.event-time{
-    color:var(--muted);
-    font-size:10px;
-}
-
-.no-events{
-    padding:20px 10px;
-
-    text-align:center;
-
-    color:var(--muted);
-
+.event-text{
     font-size:11px;
+    flex:1;
 }
 
-/* =========================
-   FOOTER HINT
-========================= */
+.event-time{
+    font-size:9px;
+    color:var(--muted);
+}
+
+.empty{
+    text-align:center;
+    padding:20px 10px;
+    color:var(--muted);
+    font-size:12px;
+}
+
+/* ================= HINT ================= */
 
 .hint{
     text-align:center;
-
     color:var(--muted);
-
     font-size:11px;
-
-    line-height:1.55;
-
-    padding:0 10px;
+    line-height:1.5;
+    padding:4px 8px;
 }
 
 .hint.error{
-    color:#ffb0bd;
+    color:#ffafbd;
 }
 
-/* =========================
-   SMALL MOBILE
-========================= */
+@media(min-width:700px){
 
-@media(max-width:380px){
-
-    .camera-wrap{
-        max-height:60svh;
+    .app{
+        padding-top:25px;
     }
 
-    .stat-value{
-        font-size:20px;
+    .camera{
+        aspect-ratio:16/10;
+        max-height:600px;
     }
 
-    .brand-title{
-        font-size:16px;
+    .stats-grid{
+        grid-template-columns:repeat(4,1fr);
     }
 
+    .model-card{
+        grid-column:auto;
+    }
 }
 </style>
 </head>
@@ -640,18 +543,34 @@ body{
     <div class="header">
 
         <div class="brand">
-            <div class="brand-title">
-                Vision <b>Counter</b>
-            </div>
-
-            <div class="brand-sub">
-                AI Person Analytics
-            </div>
+            Vision <b>Counter</b>
         </div>
 
         <div class="status">
-            <span id="statusDot" class="dot"></span>
-            <span id="statusText">Preparing</span>
+            <span id="dot" class="dot"></span>
+            <span id="status">Preparing camera</span>
+        </div>
+
+    </div>
+
+
+    <!-- LIVE COUNTS -->
+
+    <div class="count-grid">
+
+        <div class="count-card">
+            <div id="inCount" class="count-value in-value">0</div>
+            <div class="count-label">↓ ENTERED</div>
+        </div>
+
+        <div class="count-card">
+            <div id="activeCount" class="count-value active-value">0</div>
+            <div class="count-label">ACTIVE</div>
+        </div>
+
+        <div class="count-card">
+            <div id="outCount" class="count-value out-value">0</div>
+            <div class="count-label">↑ EXITED</div>
         </div>
 
     </div>
@@ -659,126 +578,35 @@ body{
 
     <!-- CAMERA -->
 
-    <div
-        id="cameraWrap"
-        class="camera-wrap"
-    >
+    <div id="cameraBox" class="camera-card">
 
-        <video
-            id="rawVideo"
-            autoplay
-            playsinline
-            muted
-        ></video>
+        <div class="camera">
 
+            <!-- Raw camera used only for capture -->
+            <video
+                id="video"
+                autoplay
+                playsinline
+                muted>
+            </video>
 
-        <img
-            id="processedFrame"
-            alt="AI processed stream"
-        >
+            <!-- Processed YOLO result -->
+            <img
+                id="processedFrame"
+                alt="Processed people detection">
 
-
-        <div
-            id="cameraPlaceholder"
-            class="camera-placeholder"
-        >
-
-            <div class="camera-icon">📷</div>
-
-            <strong>Phone Camera Ready</strong>
-
-            <span>
-                Enable your camera to start live
-                person detection and counting.
-            </span>
-
-        </div>
-
-
-        <!-- LIVE BADGE -->
-
-        <div class="live-badge">
-
-            <span
-                id="liveDot"
-                class="live-dot"
-            ></span>
-
-            <span id="liveText">
-                OFFLINE
-            </span>
-
-        </div>
-
-
-        <!-- AI BADGE -->
-
-        <div class="ai-badge">
-            YOLO · PERSON ONLY
-        </div>
-
-
-        <!-- BOUNDARY -->
-
-        <div
-            id="boundaryLine"
-            class="boundary-line"
-        >
-            <div class="boundary-label">
-                COUNTING LINE
-            </div>
-        </div>
-
-    </div>
-
-
-    <!-- STATS -->
-
-    <div class="stats">
-
-        <div class="stat">
-
-            <div
-                id="currentCount"
-                class="stat-value"
-            >
-                0
+            <div class="live-badge">
+                <span id="liveIndicator" class="live-indicator"></span>
+                <span id="liveText">CONNECTING</span>
             </div>
 
-            <div class="stat-label">
-                Current
-            </div>
-
-        </div>
-
-
-        <div class="stat in">
-
-            <div
-                id="inCount"
-                class="stat-value"
-            >
-                0
-            </div>
-
-            <div class="stat-label">
-                Entered
-            </div>
-
-        </div>
-
-
-        <div class="stat out">
-
-            <div
-                id="outCount"
-                class="stat-value"
-            >
-                0
-            </div>
-
-            <div class="stat-label">
-                Exited
+            <div id="waiting" class="waiting">
+                <div class="loader"></div>
+                <div>
+                    <strong>Preparing live analysis</strong>
+                    <br>
+                    Camera frames will appear here after processing.
+                </div>
             </div>
 
         </div>
@@ -786,55 +614,120 @@ body{
     </div>
 
 
-    <!-- CONTROLS -->
+    <!-- CAMERA CONTROLS -->
 
     <div class="controls">
 
         <button
             id="startBtn"
-            class="btn primary"
-        >
-            ▶ Start Camera
-        </button>
+            class="btn primary">
 
+            ▶ Start Stream
+
+        </button>
 
         <button
             id="flipBtn"
-            class="btn secondary"
-        >
+            class="btn secondary">
+
             🔄 Flip Camera
+
         </button>
 
     </div>
 
 
-    <!-- EVENTS -->
+    <div
+        id="hint"
+        class="hint">
 
-    <div class="events-panel">
+        Rear camera is preferred. The live view displays YOLO segmentation and tracking results.
 
-        <div class="events-header">
+    </div>
 
-            <div class="events-title">
-                Recent Events
-            </div>
 
-            <div
-                id="eventCount"
-                class="events-count"
-            >
-                0 events
-            </div>
+    <!-- SYSTEM STATS -->
+
+    <div class="section">
+
+        <div class="section-title">
+
+            <span>System Stats</span>
+
+            <button
+                id="resetBtn"
+                class="btn secondary"
+                style="min-height:auto;padding:7px 10px;font-size:10px">
+
+                ↻ Reset Counts
+
+            </button>
 
         </div>
 
+        <div class="stats-grid">
 
-        <div
-            id="events"
-            class="events"
-        >
+            <div class="stat">
 
-            <div class="no-events">
-                No crossing events yet
+                <div
+                    id="activeTracks"
+                    class="stat-value">
+
+                    0
+
+                </div>
+
+                <div class="stat-label">
+                    Active Tracks
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div
+                    id="fps"
+                    class="stat-value">
+
+                    0.0
+
+                </div>
+
+                <div class="stat-label">
+                    Processing FPS
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div
+                    id="boundaryStat"
+                    class="stat-value">
+
+                    50%
+
+                </div>
+
+                <div class="stat-label">
+                    Boundary Position
+                </div>
+
+            </div>
+
+
+            <div class="stat model-card">
+
+                <div class="stat-value" style="font-size:14px">
+                    YOLOv8n-SEG
+                </div>
+
+                <div class="stat-label">
+                    Single Model
+                </div>
+
             </div>
 
         </div>
@@ -842,14 +735,180 @@ body{
     </div>
 
 
-    <!-- HINT -->
+    <!-- CONFIGURATION -->
 
-    <div
-        id="hint"
-        class="hint"
-    >
-        Rear camera is preferred by default.
-        Position the counting line where people should cross.
+    <div class="section">
+
+        <div class="section-title">
+            Configuration
+        </div>
+
+
+        <!-- Boundary -->
+
+        <div class="config-item">
+
+            <div class="config-top">
+
+                <span class="config-label">
+                    Boundary Line Position
+                </span>
+
+                <span
+                    id="boundaryValue"
+                    class="config-value">
+
+                    50%
+
+                </span>
+
+            </div>
+
+            <input
+                id="boundarySlider"
+                type="range"
+                min="5"
+                max="95"
+                value="50">
+
+        </div>
+
+
+        <!-- Confidence -->
+
+        <div class="config-item">
+
+            <div class="config-top">
+
+                <span class="config-label">
+                    Person Detection Confidence
+                </span>
+
+                <span
+                    id="confidenceValue"
+                    class="config-value">
+
+                    0.45
+
+                </span>
+
+            </div>
+
+            <input
+                id="confidenceSlider"
+                type="range"
+                min="0.10"
+                max="0.95"
+                step="0.01"
+                value="0.45">
+
+        </div>
+
+
+        <!-- Dead Zone -->
+
+        <div class="config-item">
+
+            <div class="config-top">
+
+                <span class="config-label">
+
+                    Boundary Stability / Dead Zone
+
+                    <span
+                        class="info"
+                        title="Creates a safety area around the boundary. Higher values reduce false crossings caused by small movements. Lower values make the counter more sensitive.">
+
+                        ⓘ
+
+                    </span>
+
+                </span>
+
+                <span
+                    id="deadZoneValue"
+                    class="config-value">
+
+                    45 px
+
+                </span>
+
+            </div>
+
+            <input
+                id="deadZoneSlider"
+                type="range"
+                min="10"
+                max="150"
+                value="45">
+
+            <div class="help">
+                Higher value = fewer false crossings · Lower value = faster sensitivity
+            </div>
+
+        </div>
+
+
+        <!-- MASK -->
+
+        <div class="toggle-row">
+
+            <span>Show Segmentation Masks</span>
+
+            <label class="switch">
+
+                <input
+                    id="maskToggle"
+                    type="checkbox"
+                    checked>
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+
+        <!-- TRACK IDS -->
+
+        <div class="toggle-row">
+
+            <span>Show Person Track IDs</span>
+
+            <label class="switch">
+
+                <input
+                    id="trackToggle"
+                    type="checkbox"
+                    checked>
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECENT EVENTS -->
+
+    <div class="section">
+
+        <div class="section-title">
+            Recent Events
+        </div>
+
+        <div
+            id="events"
+            class="events">
+
+            <div class="empty">
+                Waiting for a person to cross the boundary.
+            </div>
+
+        </div>
+
     </div>
 
 </div>
@@ -857,146 +916,137 @@ body{
 
 <script>
 
-/* =========================================================
+/* ============================================================
    ELEMENTS
-========================================================= */
+============================================================ */
 
-const rawVideo =
-    document.getElementById("rawVideo");
+const video = document.getElementById("video");
+const processedFrame = document.getElementById("processedFrame");
+const cameraBox = document.getElementById("cameraBox");
 
-const processedFrame =
-    document.getElementById("processedFrame");
+const startBtn = document.getElementById("startBtn");
+const flipBtn = document.getElementById("flipBtn");
+const resetBtn = document.getElementById("resetBtn");
 
-const cameraWrap =
-    document.getElementById("cameraWrap");
+const statusEl = document.getElementById("status");
+const dot = document.getElementById("dot");
 
-const cameraPlaceholder =
-    document.getElementById("cameraPlaceholder");
+const liveIndicator = document.getElementById("liveIndicator");
+const liveText = document.getElementById("liveText");
 
-const startBtn =
-    document.getElementById("startBtn");
+const waiting = document.getElementById("waiting");
+const hint = document.getElementById("hint");
 
-const flipBtn =
-    document.getElementById("flipBtn");
+const inCount = document.getElementById("inCount");
+const activeCount = document.getElementById("activeCount");
+const outCount = document.getElementById("outCount");
 
-const boundaryLine =
-    document.getElementById("boundaryLine");
+const activeTracks = document.getElementById("activeTracks");
+const fps = document.getElementById("fps");
+const boundaryStat = document.getElementById("boundaryStat");
 
-const statusText =
-    document.getElementById("statusText");
+const boundarySlider =
+    document.getElementById("boundarySlider");
 
-const statusDot =
-    document.getElementById("statusDot");
+const confidenceSlider =
+    document.getElementById("confidenceSlider");
 
-const liveDot =
-    document.getElementById("liveDot");
+const deadZoneSlider =
+    document.getElementById("deadZoneSlider");
 
-const liveText =
-    document.getElementById("liveText");
+const boundaryValue =
+    document.getElementById("boundaryValue");
 
-const currentCount =
-    document.getElementById("currentCount");
+const confidenceValue =
+    document.getElementById("confidenceValue");
 
-const inCount =
-    document.getElementById("inCount");
+const deadZoneValue =
+    document.getElementById("deadZoneValue");
 
-const outCount =
-    document.getElementById("outCount");
+const maskToggle =
+    document.getElementById("maskToggle");
 
-const eventsContainer =
+const trackToggle =
+    document.getElementById("trackToggle");
+
+const eventsBox =
     document.getElementById("events");
 
-const eventCount =
-    document.getElementById("eventCount");
 
-const hint =
-    document.getElementById("hint");
-
-
-/* =========================================================
+/* ============================================================
    STATE
-========================================================= */
+============================================================ */
 
 let stream = null;
-
 let ws = null;
-
-let sending = false;
-
-let running = false;
+let frameTimer = null;
 
 let facing = "environment";
 
-let boundaryPercent = 50;
-
-let frameTimer = null;
-
-let reconnectTimer = null;
-
-let events = [];
-
-
-/* =========================================================
-   CANVAS
-========================================================= */
-
-const canvas =
+let canvas =
     document.createElement("canvas");
 
-const ctx =
+let ctx =
     canvas.getContext(
         "2d",
-        {
-            alpha:false
-        }
+        { alpha:false }
     );
 
+let running = false;
 
-/* =========================================================
+let lastConfigSent = 0;
+
+
+/* ============================================================
    STATUS
-========================================================= */
+============================================================ */
 
-function setStatus(text, state = "idle") {
+function setStatus(text,state="idle"){
 
-    statusText.textContent = text;
+    statusEl.textContent = text;
 
-    statusDot.className = "dot";
+    dot.className =
+        "dot" +
+        (
+            state === "on"
+                ? " on"
+                : state === "error"
+                    ? " error"
+                    : ""
+        );
 
-    if (state === "on") {
-        statusDot.classList.add("on");
-    }
-
-    if (state === "error") {
-        statusDot.classList.add("error");
-    }
-
+    hint.classList.toggle(
+        "error",
+        state === "error"
+    );
 }
 
 
-function setLive(active) {
+function setLive(active){
 
-    if (active) {
+    if(active){
 
-        liveDot.classList.add("active");
+        liveIndicator.classList.add("on");
 
-        liveText.textContent = "LIVE";
+        liveText.textContent =
+            "LIVE ANALYSIS";
 
-    } else {
+    }else{
 
-        liveDot.classList.remove("active");
+        liveIndicator.classList.remove("on");
 
-        liveText.textContent = "OFFLINE";
+        liveText.textContent =
+            "CONNECTING";
 
     }
-
 }
 
 
-/* =========================================================
+/* ============================================================
    WEBSOCKET URL
-========================================================= */
+============================================================ */
 
-function getWebSocketURL() {
+function getWsUrl(){
 
     const protocol =
         location.protocol === "https:"
@@ -1008,323 +1058,578 @@ function getWebSocketURL() {
         location.host +
         "/phone-stream?mode=phone"
     );
-
 }
 
 
-/* =========================================================
-   CAMERA CHECK
-========================================================= */
+/* ============================================================
+   CAMERA
+============================================================ */
 
-function cameraSupported() {
+async function openCamera(){
 
-    return !!(
-        navigator.mediaDevices &&
-        navigator.mediaDevices.getUserMedia
-    );
-
-}
-
-
-function secureContextAvailable() {
-
-    return (
-        window.isSecureContext ||
-        location.hostname === "localhost" ||
-        location.hostname === "127.0.0.1"
-    );
-
-}
-
-
-/* =========================================================
-   OPEN CAMERA
-========================================================= */
-
-async function openCamera() {
-
-    if (!cameraSupported()) {
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ){
 
         throw new Error(
-            "Camera access is not supported by this browser."
+            "Camera API is not available."
         );
-
     }
 
 
-    if (stream) {
+    if(stream){
 
-        stream
-            .getTracks()
+        stream.getTracks()
             .forEach(track => track.stop());
 
         stream = null;
-
     }
 
 
-    setStatus("Requesting camera");
+    setStatus(
+        "Requesting camera"
+    );
 
 
     const constraints = {
 
-        video: {
-
-            facingMode: {
-                ideal: facing
+        video:{
+            facingMode:{
+                ideal:facing
             },
 
-            width: {
-                ideal:1280,
-                max:1920
+            width:{
+                ideal:1280
             },
 
-            height: {
-                ideal:720,
-                max:1080
+            height:{
+                ideal:720
             }
-
         },
 
         audio:false
-
     };
 
 
-    try {
-
-        stream =
-            await navigator.mediaDevices
-                .getUserMedia(constraints);
-
-    }
-
-    catch (error) {
-
-        /*
-         Fallback for browsers/devices
-         that don't expose facingMode properly.
-        */
-
-        stream =
-            await navigator.mediaDevices
-                .getUserMedia({
-                    video:true,
-                    audio:false
-                });
-
-    }
+    stream =
+        await navigator.mediaDevices
+            .getUserMedia(constraints);
 
 
-    rawVideo.srcObject = stream;
+    video.srcObject = stream;
 
-    await rawVideo.play();
-
-
-    const track =
-        stream.getVideoTracks()[0];
-
-    const settings =
-        track.getSettings();
-
-
-    if (settings.facingMode) {
-
-        facing =
-            settings.facingMode;
-
-    }
-
-
-    cameraWrap.classList.toggle(
-        "front",
-        facing === "user"
-    );
-
-
-    cameraPlaceholder
-        .classList
-        .add("hidden");
+    await video.play();
 
 
     setStatus(
         "Camera ready",
         "on"
     );
-
 }
 
 
-/* =========================================================
+/* ============================================================
    CONNECT WEBSOCKET
-========================================================= */
+============================================================ */
 
-function connectWebSocket() {
+function connectSocket(){
 
     return new Promise(
-        (resolve, reject) => {
+        (resolve,reject)=>{
 
-            let connected = false;
-
-
-            try {
-
-                ws =
-                    new WebSocket(
-                        getWebSocketURL()
-                    );
-
-            }
-
-            catch (error) {
-
-                reject(error);
-                return;
-
-            }
+            ws =
+                new WebSocket(
+                    getWsUrl()
+                );
 
 
-            ws.binaryType = "blob";
+            ws.binaryType =
+                "arraybuffer";
 
 
             ws.onopen = () => {
 
-                connected = true;
-
                 setStatus(
-                    "AI connected",
+                    "Stream connected",
                     "on"
                 );
 
-                setLive(true);
-
                 resolve();
-
             };
 
 
             ws.onerror = () => {
 
-                if (!connected) {
-
-                    reject(
-                        new Error(
-                            "Unable to connect to AI processing server."
-                        )
-                    );
-
-                }
-
+                reject(
+                    new Error(
+                        "Unable to connect live stream."
+                    )
+                );
             };
 
 
             ws.onclose = () => {
 
-                setLive(false);
-
-                if (running) {
+                if(running){
 
                     setStatus(
-                        "Reconnecting...",
+                        "Stream disconnected",
                         "error"
                     );
 
-                    scheduleReconnect();
-
+                    setLive(false);
                 }
-
             };
 
 
             ws.onmessage =
                 handleServerMessage;
-
         }
     );
-
 }
 
 
-/* =========================================================
-   RECONNECT
-========================================================= */
+/* ============================================================
+   RECEIVE BACKEND RESULTS
+============================================================ */
 
-function scheduleReconnect() {
+function handleServerMessage(event){
 
-    clearTimeout(reconnectTimer);
+    let data;
 
-    reconnectTimer =
-        setTimeout(
-            async () => {
+    try{
 
-                if (
-                    running &&
-                    (!ws ||
-                    ws.readyState !== WebSocket.OPEN)
-                ) {
+        data =
+            JSON.parse(
+                event.data
+            );
 
-                    try {
+    }catch(error){
 
-                        await connectWebSocket();
-
-                    }
-
-                    catch (error) {
-
-                        scheduleReconnect();
-
-                    }
-
-                }
-
-            },
-            2000
+        console.error(
+            "Invalid server message",
+            error
         );
 
-}
-
-
-/* =========================================================
-   SEND CAMERA FRAME
-========================================================= */
-
-function sendFrame() {
-
-    if (!running) return;
-
-    if (sending) return;
-
-    if (!stream) return;
-
-    if (!ws) return;
-
-    if (
-        ws.readyState !== WebSocket.OPEN
-    ) return;
-
-    if (
-        rawVideo.readyState < 2
-    ) return;
-
-    if (
-        !rawVideo.videoWidth ||
-        !rawVideo.videoHeight
-    ) return;
-
-
-    /*
-      Prevent browser memory buildup
-      if backend is processing slower.
-    */
-
-    if (ws.bufferedAmount > 600000) {
-
         return;
-
     }
 
 
-    sending = true;
+    /* ---------------- FRAME ---------------- */
+
+    if(data.type === "frame"){
+
+        if(data.image){
+
+            processedFrame.src =
+                "data:image/jpeg;base64," +
+                data.image;
+
+
+            cameraBox.classList.add(
+                "processed"
+            );
+
+            waiting.classList.add(
+                "hidden"
+            );
+
+            setLive(true);
+
+            setStatus(
+                "Live processing",
+                "on"
+            );
+        }
+
+
+        if(data.stats){
+
+            updateStats(
+                data.stats
+            );
+        }
+
+
+        if(data.events){
+
+            updateEvents(
+                data.events
+            );
+        }
+    }
+
+
+    /* ---------------- STATUS ---------------- */
+
+    else if(data.type === "status"){
+
+        if(data.message){
+
+            setStatus(
+                data.message,
+                "on"
+            );
+        }
+    }
+
+
+    /* ---------------- CONFIG ---------------- */
+
+    else if(
+        data.type === "config_updated"
+    ){
+
+        if(data.stats){
+
+            updateStats(
+                data.stats
+            );
+        }
+    }
+
+
+    /* ---------------- ERROR ---------------- */
+
+    else if(data.type === "error"){
+
+        setStatus(
+            data.message ||
+            "Server error",
+            "error"
+        );
+
+        hint.textContent =
+            data.message ||
+            "Unable to process the stream.";
+    }
+}
+
+
+/* ============================================================
+   UPDATE STATS
+============================================================ */
+
+function valueOf(
+    obj,
+    keys,
+    fallback=0
+){
+
+    for(const key of keys){
+
+        if(
+            obj &&
+            obj[key] !== undefined &&
+            obj[key] !== null
+        ){
+
+            return obj[key];
+        }
+    }
+
+    return fallback;
+}
+
+
+function updateStats(stats){
+
+    /*
+    Supports slightly different backend key names.
+    */
+
+    const entered =
+        valueOf(
+            stats,
+            [
+                "in_count",
+                "entered",
+                "total_in",
+                "in"
+            ],
+            0
+        );
+
+
+    const exited =
+        valueOf(
+            stats,
+            [
+                "out_count",
+                "exited",
+                "total_out",
+                "out"
+            ],
+            0
+        );
+
+
+    const active =
+        valueOf(
+            stats,
+            [
+                "active_tracks",
+                "active",
+                "tracks"
+            ],
+            0
+        );
+
+
+    const processingFps =
+        valueOf(
+            stats,
+            [
+                "fps",
+                "processing_fps"
+            ],
+            0
+        );
+
+
+    const lineRatio =
+        valueOf(
+            stats,
+            [
+                "line_position",
+                "line_position_ratio",
+                "boundary_position"
+            ],
+            Number(
+                boundarySlider.value
+            ) / 100
+        );
+
+
+    inCount.textContent =
+        entered;
+
+    outCount.textContent =
+        exited;
+
+    activeCount.textContent =
+        active;
+
+    activeTracks.textContent =
+        active;
+
+    fps.textContent =
+        Number(processingFps)
+            .toFixed(1);
+
+
+    let percentage =
+        Number(lineRatio);
+
+    if(percentage <= 1){
+
+        percentage *= 100;
+    }
+
+    percentage =
+        Math.round(
+            percentage
+        );
+
+
+    boundaryStat.textContent =
+        percentage + "%";
+
+    boundaryValue.textContent =
+        percentage + "%";
+
+    boundarySlider.value =
+        percentage;
+}
+
+
+/* ============================================================
+   UPDATE EVENTS
+============================================================ */
+
+function updateEvents(events){
+
+    if(
+        !Array.isArray(events) ||
+        events.length === 0
+    ){
+
+        if(
+            eventsBox.children.length === 0
+        ){
+
+            eventsBox.innerHTML =
+                `
+                <div class="empty">
+                    Waiting for a person to cross the boundary.
+                </div>
+                `;
+        }
+
+        return;
+    }
+
+
+    eventsBox.innerHTML = "";
+
+
+    const latest =
+        events.slice(-8).reverse();
+
+
+    latest.forEach(event => {
+
+        const direction =
+            String(
+                event.direction ||
+                event.type ||
+                event.action ||
+                ""
+            ).toUpperCase();
+
+
+        const trackId =
+            event.track_id ??
+            event.id ??
+            event.person_id ??
+            "?";
+
+
+        const isIn =
+            direction === "IN" ||
+            direction === "ENTER" ||
+            direction === "ENTERED";
+
+
+        const eventEl =
+            document.createElement("div");
+
+
+        eventEl.className =
+            "event " +
+            (
+                isIn
+                    ? "in"
+                    : "out"
+            );
+
+
+        let label;
+
+        if(isIn){
+
+            label =
+                `Person #${trackId} entered`;
+
+        }else{
+
+            label =
+                `Person #${trackId} exited`;
+        }
+
+
+        eventEl.innerHTML =
+            `
+            <div class="event-dot"></div>
+
+            <div class="event-text">
+                ${label}
+            </div>
+
+            <div class="event-time">
+                ${formatEventTime(event)}
+            </div>
+            `;
+
+
+        eventsBox.appendChild(
+            eventEl
+        );
+    });
+}
+
+
+function formatEventTime(event){
+
+    const timestamp =
+        event.time ||
+        event.timestamp ||
+        event.created_at;
+
+
+    if(!timestamp){
+
+        return "Now";
+    }
+
+
+    try{
+
+        const date =
+            new Date(timestamp);
+
+        if(
+            isNaN(
+                date.getTime()
+            )
+        ){
+
+            return "Now";
+        }
+
+        return date.toLocaleTimeString(
+            [],
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        );
+
+    }catch(error){
+
+        return "Now";
+    }
+}
+
+
+/* ============================================================
+   SEND FRAME
+============================================================ */
+
+function sendFrame(){
+
+    if(
+        !running ||
+        !stream ||
+        !ws ||
+        ws.readyState !== WebSocket.OPEN
+    ){
+
+        return;
+    }
+
+
+    if(
+        video.readyState < 2 ||
+        !video.videoWidth ||
+        !video.videoHeight
+    ){
+
+        return;
+    }
+
+
+    /*
+    Prevent queue buildup.
+    */
+
+    if(
+        ws.bufferedAmount > 600000
+    ){
+
+        return;
+    }
 
 
     const maxWidth = 640;
@@ -1332,7 +1637,8 @@ function sendFrame() {
     const scale =
         Math.min(
             1,
-            maxWidth / rawVideo.videoWidth
+            maxWidth /
+            video.videoWidth
         );
 
 
@@ -1340,7 +1646,8 @@ function sendFrame() {
         Math.max(
             2,
             Math.round(
-                rawVideo.videoWidth * scale
+                video.videoWidth *
+                scale
             )
         );
 
@@ -1349,13 +1656,14 @@ function sendFrame() {
         Math.max(
             2,
             Math.round(
-                rawVideo.videoHeight * scale
+                video.videoHeight *
+                scale
             )
         );
 
 
     ctx.drawImage(
-        rawVideo,
+        video,
         0,
         0,
         canvas.width,
@@ -1364,37 +1672,16 @@ function sendFrame() {
 
 
     canvas.toBlob(
-
         blob => {
 
-            try {
+            if(
+                blob &&
+                ws &&
+                ws.readyState === WebSocket.OPEN &&
+                ws.bufferedAmount < 600000
+            ){
 
-                if (
-                    blob &&
-                    ws &&
-                    ws.readyState === WebSocket.OPEN &&
-                    ws.bufferedAmount < 600000
-                ) {
-
-                    ws.send(blob);
-
-                }
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Frame send error:",
-                    error
-                );
-
-            }
-
-            finally {
-
-                sending = false;
-
+                ws.send(blob);
             }
 
         },
@@ -1402,773 +1689,62 @@ function sendFrame() {
         "image/jpeg",
 
         0.72
-
     );
-
 }
 
 
-/* =========================================================
-   HANDLE BACKEND RESPONSE
-========================================================= */
-
-function handleServerMessage(event) {
-
-    /*
-      Backend can return JSON.
-    */
-
-    if (typeof event.data === "string") {
-
-        try {
-
-            const data =
-                JSON.parse(event.data);
-
-
-            /* ---------- ERROR ---------- */
-
-            if (data.error) {
-
-                setStatus(
-                    data.error,
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            /* ---------- PROCESSED FRAME ---------- */
-
-            if (data.frame) {
-
-                showProcessedFrame(
-                    data.frame
-                );
-
-            }
-
-
-            /*
-              Support alternate backend names
-            */
-
-            if (data.image) {
-
-                showProcessedFrame(
-                    data.image
-                );
-
-            }
-
-
-            if (data.frame_base64) {
-
-                showProcessedFrame(
-                    data.frame_base64
-                );
-
-            }
-
-
-            /* ---------- STATS ---------- */
-
-            updateStats(data);
-
-
-            /* ---------- EVENTS ---------- */
-
-            if (data.event) {
-
-                addEvent(
-                    data.event
-                );
-
-            }
-
-
-            if (
-                Array.isArray(data.events)
-            ) {
-
-                data.events.forEach(
-                    eventItem => {
-
-                        addEvent(
-                            eventItem
-                        );
-
-                    }
-                );
-
-            }
-
-
-            /* ---------- BOUNDARY ---------- */
-
-            if (
-                data.boundary_y !== undefined
-            ) {
-
-                updateBoundaryFromServer(
-                    data.boundary_y
-                );
-
-            }
-
-
-            if (
-                data.boundary_percent !== undefined
-            ) {
-
-                setBoundaryPercent(
-                    data.boundary_percent,
-                    false
-                );
-
-            }
-
-
-        }
-
-        catch (error) {
-
-            console.warn(
-                "Invalid server message",
-                error
-            );
-
-        }
-
-        return;
-
-    }
-
-
-    /*
-      If backend sends binary image directly.
-    */
-
-    if (
-        event.data instanceof Blob
-    ) {
-
-        const url =
-            URL.createObjectURL(
-                event.data
-            );
-
-
-        processedFrame.onload =
-            () => {
-
-                URL.revokeObjectURL(url);
-
-            };
-
-
-        processedFrame.src = url;
-
-        cameraWrap.classList.add(
-            "processed"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   DISPLAY PROCESSED FRAME
-========================================================= */
-
-function showProcessedFrame(frameData) {
-
-    if (!frameData) return;
-
-
-    let source = frameData;
-
-
-    if (
-        !source.startsWith("data:image")
-    ) {
-
-        source =
-            "data:image/jpeg;base64," +
-            source;
-
-    }
-
-
-    processedFrame.src = source;
-
-
-    cameraWrap.classList.add(
-        "processed"
-    );
-
-}
-
-
-/* =========================================================
-   UPDATE STATS
-========================================================= */
-
-function updateStats(data) {
-
-    /*
-      Multiple field names supported
-      so frontend is tolerant of backend.
-    */
-
-    const current =
-        data.current ??
-        data.current_count ??
-        data.zone_count ??
-        data.people ??
-        data.count;
-
-
-    const entered =
-        data.in_count ??
-        data.total_in ??
-        data.entered;
-
-
-    const exited =
-        data.out_count ??
-        data.total_out ??
-        data.exited;
-
-
-    if (
-        current !== undefined
-    ) {
-
-        currentCount.textContent =
-            current;
-
-    }
-
-
-    if (
-        entered !== undefined
-    ) {
-
-        inCount.textContent =
-            entered;
-
-    }
-
-
-    if (
-        exited !== undefined
-    ) {
-
-        outCount.textContent =
-            exited;
-
-    }
-
-}
-
-
-/* =========================================================
-   EVENTS
-========================================================= */
-
-function addEvent(eventData) {
-
-    let direction;
-    let timestamp;
-
-
-    if (
-        typeof eventData === "string"
-    ) {
-
-        direction =
-            eventData.toUpperCase();
-
-        timestamp =
-            new Date()
-                .toLocaleTimeString(
-                    [],
-                    {
-                        hour:"2-digit",
-                        minute:"2-digit",
-                        second:"2-digit"
-                    }
-                );
-
-    }
-
-    else {
-
-        direction =
-            (
-                eventData.direction ||
-                eventData.type ||
-                eventData.event ||
-                ""
-            )
-            .toString()
-            .toUpperCase();
-
-
-        timestamp =
-            eventData.time ||
-            eventData.timestamp ||
-            new Date()
-                .toLocaleTimeString(
-                    [],
-                    {
-                        hour:"2-digit",
-                        minute:"2-digit",
-                        second:"2-digit"
-                    }
-                );
-
-    }
-
-
-    if (
-        direction !== "IN" &&
-        direction !== "OUT" &&
-        direction !== "ENTERED" &&
-        direction !== "EXITED"
-    ) {
-
-        return;
-
-    }
-
-
-    const normalizedDirection =
-        (
-            direction === "IN" ||
-            direction === "ENTERED"
-        )
-        ? "IN"
-        : "OUT";
-
-
-    const key =
-        normalizedDirection +
-        "_" +
-        timestamp;
-
-
-    /*
-      Avoid duplicate event rendering.
-    */
-
-    if (
-        events.some(
-            item => item.key === key
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    events.unshift({
-
-        key,
-        direction:normalizedDirection,
-        time:timestamp
-
-    });
-
-
-    /*
-      Keep recent events limited.
-    */
-
-    events =
-        events.slice(0, 20);
-
-
-    renderEvents();
-
-}
-
-
-function renderEvents() {
-
-    eventsContainer.innerHTML = "";
-
-
-    eventCount.textContent =
-        events.length +
-        (
-            events.length === 1
-                ? " event"
-                : " events"
-        );
-
-
-    if (!events.length) {
-
-        eventsContainer.innerHTML = `
-            <div class="no-events">
-                No crossing events yet
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    events.forEach(item => {
-
-        const eventElement =
-            document.createElement("div");
-
-        eventElement.className =
-            "event";
-
-
-        const type =
-            document.createElement("div");
-
-        type.className =
-            "event-type";
-
-
-        const directionDot =
-            document.createElement("span");
-
-        directionDot.className =
-            "event-direction " +
-            (
-                item.direction === "IN"
-                    ? "in"
-                    : "out"
-            );
-
-
-        const directionText =
-            document.createElement("span");
-
-        directionText.textContent =
-            item.direction === "IN"
-                ? "Person Entered"
-                : "Person Exited";
-
-
-        type.appendChild(directionDot);
-
-        type.appendChild(directionText);
-
-
-        const time =
-            document.createElement("div");
-
-        time.className =
-            "event-time";
-
-        time.textContent =
-            item.time;
-
-
-        eventElement.appendChild(type);
-
-        eventElement.appendChild(time);
-
-
-        eventsContainer.appendChild(
-            eventElement
-        );
-
-    });
-
-}
-
-
-/* =========================================================
-   BOUNDARY LINE
-========================================================= */
-
-function setBoundaryPercent(
-    percent,
-    sendToServer = true
-) {
-
-    percent =
-        Math.max(
-            5,
-            Math.min(
-                95,
-                Number(percent)
-            )
-        );
-
-
-    boundaryPercent =
-        percent;
-
-
-    boundaryLine.style.top =
-        percent + "%";
-
-
-    if (sendToServer) {
-
-        sendBoundary();
-
-    }
-
-}
-
-
-function updateBoundaryFromServer(value) {
-
-    /*
-      If backend gives percentage directly.
-    */
-
-    if (
-        value >= 0 &&
-        value <= 100
-    ) {
-
-        setBoundaryPercent(
-            value,
-            false
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SEND BOUNDARY
-========================================================= */
-
-function sendBoundary() {
-
-    if (
-        !ws ||
-        ws.readyState !== WebSocket.OPEN
-    ) {
-
-        return;
-
-    }
-
-
-    try {
-
-        ws.send(
-            JSON.stringify({
-
-                action:"set_boundary",
-
-                boundary_percent:
-                    boundaryPercent,
-
-                boundary_y:
-                    boundaryPercent
-
-            })
-        );
-
-    }
-
-    catch (error) {
-
-        console.warn(
-            "Boundary update failed"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   DRAG BOUNDARY
-========================================================= */
-
-let draggingBoundary = false;
-
-
-function moveBoundary(event) {
-
-    if (!draggingBoundary) return;
-
-
-    event.preventDefault();
-
-
-    const rect =
-        cameraWrap.getBoundingClientRect();
-
-
-    let clientY;
-
-
-    if (
-        event.touches &&
-        event.touches.length
-    ) {
-
-        clientY =
-            event.touches[0].clientY;
-
-    }
-
-    else {
-
-        clientY =
-            event.clientY;
-
-    }
-
-
-    const relativeY =
-        clientY - rect.top;
-
-
-    const percent =
-        (
-            relativeY /
-            rect.height
-        ) * 100;
-
-
-    setBoundaryPercent(
-        percent,
-        true
-    );
-
-}
-
-
-boundaryLine.addEventListener(
-    "pointerdown",
-
-    event => {
-
-        draggingBoundary = true;
-
-        boundaryLine.setPointerCapture(
-            event.pointerId
-        );
-
-        moveBoundary(event);
-
-    }
-);
-
-
-boundaryLine.addEventListener(
-    "pointermove",
-    moveBoundary
-);
-
-
-boundaryLine.addEventListener(
-    "pointerup",
-
-    event => {
-
-        draggingBoundary = false;
-
-        try {
-
-            boundaryLine.releasePointerCapture(
-                event.pointerId
-            );
-
-        }
-
-        catch (error) {}
-
-    }
-);
-
-
-boundaryLine.addEventListener(
-    "pointercancel",
-
-    () => {
-
-        draggingBoundary = false;
-
-    }
-);
-
-
-/* =========================================================
+/* ============================================================
    START
-========================================================= */
+============================================================ */
 
-async function startCamera() {
+async function start(){
 
-    if (running) return;
+    try{
 
-
-    try {
-
-        if (
-            !secureContextAvailable()
-        ) {
+        if(
+            !window.isSecureContext &&
+            location.hostname !== "localhost"
+        ){
 
             throw new Error(
-                "Camera access requires a secure HTTPS connection."
+                "Camera access requires HTTPS."
             );
-
         }
 
 
-        if (
-            !cameraSupported()
-        ) {
-
-            throw new Error(
-                "This browser does not support camera access."
-            );
-
-        }
+        waiting.classList.remove(
+            "hidden"
+        );
 
 
-        startBtn.disabled = true;
+        processedFrame.removeAttribute(
+            "src"
+        );
 
-        startBtn.textContent =
-            "Starting...";
 
-
-        hint.classList.remove(
-            "error"
+        cameraBox.classList.remove(
+            "processed"
         );
 
 
         await openCamera();
 
-
-        await connectWebSocket();
+        await connectSocket();
 
 
         running = true;
 
 
+        clearInterval(
+            frameTimer
+        );
+
+
         /*
-          ~12 FPS.
-          Keeps mobile streaming responsive
-          without overloading Render.
+        ~12 FPS capture.
+        Keeps phone responsive while
+        allowing backend inference.
         */
-
-        clearInterval(frameTimer);
-
 
         frameTimer =
             setInterval(
@@ -2178,51 +1754,21 @@ async function startCamera() {
 
 
         startBtn.textContent =
-            "■ Stop Camera";
-
-
-        startBtn.disabled = false;
+            "■ Stop Stream";
 
 
         hint.textContent =
-            facing === "environment"
-                ? "Rear camera is active. Drag the yellow line to set the counting boundary."
-                : "Front camera is active. Drag the yellow line to set the counting boundary.";
-
-
-        setLive(true);
-
-
-        /*
-          Send current boundary after connection.
-        */
-
-        setTimeout(
-            sendBoundary,
-            300
-        );
+            "Camera is streaming for real-time person segmentation and tracking.";
 
     }
 
-    catch (error) {
+    catch(error){
 
-        console.error(
-            "Camera start error:",
-            error
-        );
-
+        console.error(error);
 
         running = false;
 
-
-        startBtn.disabled = false;
-
-        startBtn.textContent =
-            "▶ Start Camera";
-
-
         setLive(false);
-
 
         setStatus(
             "Camera unavailable",
@@ -2230,113 +1776,77 @@ async function startCamera() {
         );
 
 
-        hint.classList.add(
-            "error"
-        );
-
-
-        if (
+        if(
             error.name ===
             "NotAllowedError"
-        ) {
+        ){
 
             hint.textContent =
-                "Camera permission was denied. Allow camera access in your browser settings.";
+                "Camera permission was denied. Allow camera access and try again.";
 
         }
 
-        else if (
-            error.name ===
-            "NotFoundError"
-        ) {
-
-            hint.textContent =
-                "No compatible camera was found on this device.";
-
-        }
-
-        else {
+        else{
 
             hint.textContent =
                 error.message ||
                 "Unable to start the camera.";
-
         }
-
     }
-
 }
 
 
-/* =========================================================
+/* ============================================================
    STOP
-========================================================= */
+============================================================ */
 
-function stopCamera() {
+function stop(){
 
     running = false;
 
 
-    clearInterval(frameTimer);
+    clearInterval(
+        frameTimer
+    );
 
     frameTimer = null;
 
 
-    clearTimeout(reconnectTimer);
+    if(ws){
+
+        try{
+
+            ws.send(
+                JSON.stringify({
+                    action:"stop"
+                })
+            );
+
+        }catch(error){}
 
 
-    sending = false;
-
-
-    if (ws) {
-
-        try {
-
-            if (
-                ws.readyState === WebSocket.OPEN
-            ) {
-
-                ws.send(
-                    JSON.stringify({
-                        action:"stop"
-                    })
-                );
-
-            }
-
-        }
-
-        catch (error) {}
-
-
-        try {
+        try{
 
             ws.close();
 
-        }
-
-        catch (error) {}
-
+        }catch(error){}
 
         ws = null;
-
     }
 
 
-    if (stream) {
+    if(stream){
 
-        stream
-            .getTracks()
+        stream.getTracks()
             .forEach(
                 track => track.stop()
             );
 
         stream = null;
-
     }
 
 
-    rawVideo.srcObject = null;
+    video.srcObject = null;
 
 
     processedFrame.removeAttribute(
@@ -2344,229 +1854,290 @@ function stopCamera() {
     );
 
 
-    cameraWrap.classList.remove(
+    cameraBox.classList.remove(
         "processed"
     );
 
 
-    cameraPlaceholder
-        .classList
-        .remove("hidden");
+    waiting.classList.remove(
+        "hidden"
+    );
 
 
-    startBtn.disabled = false;
-
-    startBtn.textContent =
-        "▶ Start Camera";
+    waiting.innerHTML =
+        `
+        <div>
+            <strong>Stream stopped</strong>
+            <br>
+            Tap Start Stream to begin again.
+        </div>
+        `;
 
 
     setLive(false);
-
 
     setStatus(
         "Camera stopped"
     );
 
 
-    hint.classList.remove(
-        "error"
-    );
+    startBtn.textContent =
+        "▶ Start Stream";
 
 
     hint.textContent =
-        "Tap Start Camera to begin live person detection.";
-
+        "Tap Start Stream to restart live analysis.";
 }
 
 
-/* =========================================================
-   START / STOP BUTTON
-========================================================= */
+/* ============================================================
+   FLIP CAMERA
+============================================================ */
+
+async function flipCamera(){
+
+    facing =
+        facing === "environment"
+            ? "user"
+            : "environment";
+
+
+    if(!running){
+
+        hint.textContent =
+            (
+                facing === "environment"
+                    ? "Rear"
+                    : "Front"
+            ) +
+            " camera selected.";
+
+        return;
+    }
+
+
+    /*
+    Restart stream cleanly.
+    This prevents stale tracks and camera handles.
+    */
+
+    stop();
+
+    setTimeout(
+        start,
+        350
+    );
+}
+
+
+/* ============================================================
+   SEND CONFIGURATION
+============================================================ */
+
+function sendConfig(){
+
+    if(
+        !ws ||
+        ws.readyState !== WebSocket.OPEN
+    ){
+
+        return;
+    }
+
+
+    const now =
+        Date.now();
+
+
+    /*
+    Prevent excessive slider messages.
+    */
+
+    if(
+        now -
+        lastConfigSent <
+        40
+    ){
+
+        return;
+    }
+
+
+    lastConfigSent = now;
+
+
+    ws.send(
+        JSON.stringify({
+
+            action:"config",
+
+            config:{
+
+                line_position:
+                    Number(
+                        boundarySlider.value
+                    ) / 100,
+
+                conf_threshold:
+                    Number(
+                        confidenceSlider.value
+                    ),
+
+                hysteresis:
+                    Number(
+                        deadZoneSlider.value
+                    ),
+
+                show_masks:
+                    maskToggle.checked,
+
+                show_track_ids:
+                    trackToggle.checked
+            }
+        })
+    );
+}
+
+
+/* ============================================================
+   CONFIGURATION EVENTS
+============================================================ */
+
+boundarySlider.addEventListener(
+    "input",
+    () => {
+
+        const value =
+            boundarySlider.value;
+
+        boundaryValue.textContent =
+            value + "%";
+
+        boundaryStat.textContent =
+            value + "%";
+
+        sendConfig();
+    }
+);
+
+
+confidenceSlider.addEventListener(
+    "input",
+    () => {
+
+        confidenceValue.textContent =
+            Number(
+                confidenceSlider.value
+            ).toFixed(2);
+
+        sendConfig();
+    }
+);
+
+
+deadZoneSlider.addEventListener(
+    "input",
+    () => {
+
+        deadZoneValue.textContent =
+            deadZoneSlider.value +
+            " px";
+
+        sendConfig();
+    }
+);
+
+
+maskToggle.addEventListener(
+    "change",
+    sendConfig
+);
+
+
+trackToggle.addEventListener(
+    "change",
+    sendConfig
+);
+
+
+/* ============================================================
+   RESET COUNTS
+============================================================ */
+
+resetBtn.addEventListener(
+    "click",
+    () => {
+
+        if(
+            ws &&
+            ws.readyState ===
+            WebSocket.OPEN
+        ){
+
+            ws.send(
+                JSON.stringify({
+                    action:"reset"
+                })
+            );
+        }
+
+
+        inCount.textContent = "0";
+        outCount.textContent = "0";
+        activeCount.textContent = "0";
+
+        eventsBox.innerHTML =
+            `
+            <div class="empty">
+                Waiting for a person to cross the boundary.
+            </div>
+            `;
+    }
+);
+
+
+/* ============================================================
+   BUTTON EVENTS
+============================================================ */
 
 startBtn.addEventListener(
     "click",
-
     () => {
 
-        if (running) {
+        if(running){
 
-            stopCamera();
+            stop();
 
+        }else{
+
+            start();
         }
-
-        else {
-
-            startCamera();
-
-        }
-
     }
 );
 
-
-/* =========================================================
-   FLIP CAMERA
-========================================================= */
 
 flipBtn.addEventListener(
     "click",
-
-    async () => {
-
-        facing =
-            facing === "environment"
-                ? "user"
-                : "environment";
-
-
-        if (!running) {
-
-            hint.textContent =
-                facing === "environment"
-                    ? "Rear camera selected. Tap Start Camera."
-                    : "Front camera selected. Tap Start Camera.";
-
-            return;
-
-        }
-
-
-        try {
-
-            /*
-              Stop current physical camera,
-              then open the other one.
-            */
-
-            await openCamera();
-
-
-            cameraWrap.classList.toggle(
-                "front",
-                facing === "user"
-            );
-
-
-            hint.textContent =
-                facing === "environment"
-                    ? "Rear camera active."
-                    : "Front camera active.";
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Camera flip error:",
-                error
-            );
-
-
-            setStatus(
-                "Camera switch failed",
-                "error"
-            );
-
-
-            hint.classList.add(
-                "error"
-            );
-
-
-            hint.textContent =
-                "Unable to switch cameras on this device.";
-
-        }
-
-    }
+    flipCamera
 );
 
 
-/* =========================================================
-   INITIAL BOUNDARY
-========================================================= */
-
-setBoundaryPercent(
-    50,
-    false
-);
-
-
-/* =========================================================
-   PAGE LOAD
-========================================================= */
-
-window.addEventListener(
-    "load",
-
-    () => {
-
-        if (
-            !secureContextAvailable()
-        ) {
-
-            setStatus(
-                "Secure connection required",
-                "error"
-            );
-
-
-            hint.classList.add(
-                "error"
-            );
-
-
-            hint.textContent =
-                "Camera access requires HTTPS.";
-
-            return;
-
-        }
-
-
-        if (
-            !cameraSupported()
-        ) {
-
-            setStatus(
-                "Camera unavailable",
-                "error"
-            );
-
-
-            hint.classList.add(
-                "error"
-            );
-
-
-            hint.textContent =
-                "This browser does not provide camera access.";
-
-            return;
-
-        }
-
-
-        setStatus(
-            "Ready"
-        );
-
-    }
-);
-
-
-/* =========================================================
-   CLEANUP
-========================================================= */
+/* ============================================================
+   PAGE CLEANUP
+============================================================ */
 
 window.addEventListener(
     "beforeunload",
-    stopCamera
+    stop
 );
 
-window.addEventListener(
-    "pagehide",
-    stopCamera
+
+/* ============================================================
+   INITIAL STATE
+============================================================ */
+
+setStatus(
+    "Ready"
 );
 
 </script>
