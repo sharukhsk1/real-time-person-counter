@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vision Counter | Live Human Analytics</title>
 
-<!-- QR generator for Phone Camera pairing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -24,6 +23,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden}
+
 body{
     font-family:Inter,Segoe UI,Arial,sans-serif;
     color:var(--text);
@@ -32,12 +32,11 @@ body{
         radial-gradient(circle at 100% 100%,rgba(51,141,245,.07),transparent 25%),
         var(--bg);
 }
+
 button,input,select{font:inherit}
 button{cursor:pointer}
 
-/* =========================================================
-   APP LAYOUT
-========================================================= */
+/* APP */
 .app{
     height:100vh;
     padding:10px;
@@ -47,9 +46,7 @@ button{cursor:pointer}
     gap:10px;
 }
 
-/* =========================================================
-   HEADER
-========================================================= */
+/* HEADER */
 .header{
     grid-column:1/-1;
     min-width:0;
@@ -63,6 +60,7 @@ button{cursor:pointer}
     background:rgba(17,22,34,.96);
     box-shadow:0 10px 35px rgba(0,0,0,.22);
 }
+
 .brand{
     display:flex;
     align-items:center;
@@ -70,19 +68,20 @@ button{cursor:pointer}
     white-space:nowrap;
     font-size:21px;
     font-weight:800;
-    letter-spacing:.5px;
 }
+
 .brand-icon{
-    width:38px;height:38px;
-    display:grid;place-items:center;
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
     border-radius:11px;
     color:white;
     background:linear-gradient(135deg,#25dedb,#2787ed);
-    box-shadow:0 0 25px rgba(45,212,231,.24);
 }
+
 .brand b{color:var(--cyan)}
 
-/* NAV COUNTS - moved from sidebar */
 .nav-metrics{
     flex:1;
     display:flex;
@@ -90,6 +89,7 @@ button{cursor:pointer}
     gap:8px;
     min-width:0;
 }
+
 .nav-metric{
     min-width:104px;
     padding:7px 13px;
@@ -100,20 +100,29 @@ button{cursor:pointer}
     align-items:center;
     gap:10px;
 }
+
 .nav-metric.main{
     min-width:145px;
     border-color:rgba(45,212,231,.35);
-    background:linear-gradient(135deg,rgba(45,212,231,.10),rgba(54,227,154,.04));
+    background:linear-gradient(
+        135deg,
+        rgba(45,212,231,.10),
+        rgba(54,227,154,.04)
+    );
 }
+
 .nav-icon{font-size:17px}
+
 .nav-metric-value{
     font-size:22px;
     font-weight:900;
     line-height:1;
     color:var(--cyan);
 }
+
 .nav-metric.in .nav-metric-value{color:var(--green)}
 .nav-metric.out .nav-metric-value{color:var(--red)}
+
 .nav-metric-label{
     margin-top:3px;
     color:var(--muted);
@@ -121,6 +130,7 @@ button{cursor:pointer}
     text-transform:uppercase;
     letter-spacing:1px;
 }
+
 .header-right{
     display:flex;
     align-items:center;
@@ -129,21 +139,32 @@ button{cursor:pointer}
     font-size:12px;
     white-space:nowrap;
 }
-.status{display:flex;align-items:center;gap:7px}
+
+.status{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
 .dot{
-    width:8px;height:8px;border-radius:50%;
+    width:8px;
+    height:8px;
+    border-radius:50%;
     background:var(--red);
     box-shadow:0 0 10px var(--red);
 }
+
 .dot.online{
     background:var(--green);
     box-shadow:0 0 10px var(--green);
 }
 
-/* =========================================================
-   VIDEO
-========================================================= */
-.workspace{min-width:0;min-height:0}
+/* VIDEO */
+.workspace{
+    min-width:0;
+    min-height:0;
+}
+
 .video-card{
     height:100%;
     min-height:0;
@@ -154,29 +175,41 @@ button{cursor:pointer}
     background:#020407;
     box-shadow:0 20px 60px rgba(0,0,0,.3);
 }
+
 .video-wrap{
     position:absolute;
     inset:0;
     display:grid;
     place-items:center;
 }
+
 #videoStream{
     display:block;
-    max-width:100%;
-    max-height:100%;
     width:100%;
     height:100%;
     object-fit:contain;
     background:#000;
 }
+
+#localVideo{
+    display:none;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:#000;
+}
+
 .video-topbar{
     position:absolute;
-    z-index:10;
-    top:14px;left:16px;right:16px;
+    z-index:20;
+    top:14px;
+    left:16px;
+    right:16px;
     display:flex;
     justify-content:space-between;
     pointer-events:none;
 }
+
 .live-badge,.model-badge{
     padding:8px 12px;
     border-radius:999px;
@@ -187,29 +220,45 @@ button{cursor:pointer}
     letter-spacing:1px;
     color:#b9c4d5;
 }
+
 .live-badge .dot{
     display:inline-block;
     margin-right:7px;
-    width:7px;height:7px;
+    width:7px;
+    height:7px;
 }
-.live-badge .dot.online{animation:pulse 1.5s infinite}
-@keyframes pulse{50%{opacity:.4;transform:scale(.75)}}
 
-/* Instant UI boundary overlay.
-   It moves immediately while backend receives the same value. */
+@keyframes pulse{
+    50%{
+        opacity:.4;
+        transform:scale(.75);
+    }
+}
+
+.live-badge .dot.online{
+    animation:pulse 1.5s infinite;
+}
+
+/* BOUNDARY */
 #instantBoundary{
     position:absolute;
-    z-index:8;
-    top:0;bottom:0;
+    z-index:15;
+    top:0;
+    bottom:0;
     left:50%;
     width:3px;
     pointer-events:none;
     opacity:0;
     background:#ffff00;
-    box-shadow:0 0 8px #ffff00,0 0 20px rgba(255,255,0,.8);
-    transition:none;
+    box-shadow:
+        0 0 8px #ffff00,
+        0 0 20px rgba(255,255,0,.8);
 }
-#instantBoundary.visible{opacity:.88}
+
+#instantBoundary.visible{
+    opacity:.9;
+}
+
 #instantBoundary::before{
     content:"BOUNDARY";
     position:absolute;
@@ -225,22 +274,35 @@ button{cursor:pointer}
     font-weight:800;
     letter-spacing:2px;
 }
+
 .video-placeholder{
-    position:absolute;inset:0;
-    z-index:3;
+    position:absolute;
+    inset:0;
+    z-index:5;
     display:grid;
     place-items:center;
     text-align:center;
     color:var(--muted);
     pointer-events:none;
 }
-.placeholder-icon{font-size:48px;margin-bottom:14px}
-.placeholder-title{font-size:18px;color:#c7d1e0;font-weight:700;margin-bottom:8px}
-.hidden{display:none!important}
 
-/* =========================================================
-   SIDEBAR
-========================================================= */
+.placeholder-icon{
+    font-size:48px;
+    margin-bottom:14px;
+}
+
+.placeholder-title{
+    font-size:18px;
+    color:#c7d1e0;
+    font-weight:700;
+    margin-bottom:8px;
+}
+
+.hidden{
+    display:none!important;
+}
+
+/* SIDEBAR */
 .sidebar{
     min-height:0;
     overflow-y:auto;
@@ -249,9 +311,15 @@ button{cursor:pointer}
     flex-direction:column;
     gap:11px;
 }
-.sidebar::-webkit-scrollbar{width:7px}
-.sidebar::-webkit-scrollbar-track{background:transparent}
-.sidebar::-webkit-scrollbar-thumb{background:#354055;border-radius:10px}
+
+.sidebar::-webkit-scrollbar{
+    width:7px;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+    background:#354055;
+    border-radius:10px;
+}
 
 .panel{
     background:rgba(17,22,34,.97);
@@ -259,6 +327,7 @@ button{cursor:pointer}
     border-radius:16px;
     padding:16px;
 }
+
 .panel-title{
     font-size:13px;
     letter-spacing:2px;
@@ -270,23 +339,23 @@ button{cursor:pointer}
     gap:10px;
     margin-bottom:14px;
 }
+
 .panel-title:before{
     content:"";
-    width:4px;height:20px;
+    width:4px;
+    height:20px;
     border-radius:3px;
     background:var(--cyan);
-    box-shadow:0 0 12px rgba(45,212,231,.7);
 }
 
-/* =========================================================
-   CAMERA SOURCE
-========================================================= */
+/* SOURCES */
 .source-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
     gap:8px;
     margin-bottom:12px;
 }
+
 .source-type{
     padding:11px 9px;
     border-radius:10px;
@@ -297,34 +366,33 @@ button{cursor:pointer}
     font-size:12px;
     transition:.2s;
 }
+
 .source-type:hover,
 .source-type.active{
     border-color:var(--cyan);
     color:var(--text);
     background:rgba(45,212,231,.08);
 }
+
 .source-type span{
     display:block;
     font-size:17px;
     margin-bottom:4px;
 }
+
 .source-type.coming-soon{
     position:relative;
     opacity:.58;
     cursor:not-allowed;
 }
-.source-type.coming-soon:hover{
-    border-color:#667085;
-    color:var(--muted);
-    background:#151b28;
-}
+
 .source-type.coming-soon::after{
     content:attr(data-tooltip);
     position:absolute;
     z-index:100;
     left:50%;
     bottom:calc(100% + 9px);
-    transform:translateX(-50%) translateY(4px);
+    transform:translateX(-50%);
     width:max-content;
     max-width:210px;
     padding:8px 10px;
@@ -333,26 +401,24 @@ button{cursor:pointer}
     border:1px solid rgba(255,255,255,.12);
     color:#dbe5f2;
     font-size:10px;
-    line-height:1.4;
     text-align:center;
     opacity:0;
     visibility:hidden;
-    pointer-events:none;
-    transition:.18s ease;
-    box-shadow:0 10px 25px rgba(0,0,0,.35);
 }
+
 .source-type.coming-soon:hover::after{
     opacity:1;
     visibility:visible;
-    transform:translateX(-50%) translateY(0);
 }
+
 .field-label{
     font-size:12px;
     color:#aeb8c9;
     margin-bottom:7px;
     display:block;
 }
-.input,.select{
+
+.select{
     width:100%;
     background:#1b2130;
     border:1px solid #30394d;
@@ -361,10 +427,11 @@ button{cursor:pointer}
     border-radius:10px;
     outline:none;
 }
-.input:focus,.select:focus{
+
+.select:focus{
     border-color:var(--cyan);
-    box-shadow:0 0 0 3px rgba(45,212,231,.08);
 }
+
 .source-help{
     font-size:11px;
     line-height:1.5;
@@ -372,7 +439,7 @@ button{cursor:pointer}
     margin-top:8px;
 }
 
-/* Phone QR panel */
+/* PHONE */
 .phone-pair{
     margin-top:12px;
     padding:13px;
@@ -381,17 +448,36 @@ button{cursor:pointer}
     background:rgba(45,212,231,.035);
     text-align:center;
 }
+
 .qr-box{
-    width:180px;height:180px;
+    width:180px;
+    height:180px;
     margin:5px auto 12px;
-    display:grid;place-items:center;
+    display:grid;
+    place-items:center;
     background:white;
     border-radius:10px;
     padding:8px;
 }
-.qr-box img,.qr-box canvas{max-width:100%;max-height:100%}
-.pair-title{font-size:13px;font-weight:800;color:#dce8f4}
-.pair-sub{font-size:11px;color:var(--muted);line-height:1.5;margin-top:5px}
+
+.qr-box img,
+.qr-box canvas{
+    max-width:100%;
+    max-height:100%;
+}
+
+.pair-title{
+    font-size:13px;
+    font-weight:800;
+}
+
+.pair-sub{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.5;
+    margin-top:5px;
+}
+
 .pair-url{
     margin-top:8px;
     padding:8px;
@@ -401,30 +487,48 @@ button{cursor:pointer}
     font-size:10px;
     word-break:break-all;
 }
+
 .phone-status{
     margin-top:9px;
     color:var(--yellow);
     font-size:11px;
 }
-.phone-status.connected{color:var(--green)}
 
+.phone-status.connected{
+    color:var(--green);
+}
+
+/* BUTTONS */
 .actions{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:9px;
     margin-top:12px;
 }
+
 .btn{
     border:0;
     border-radius:11px;
     padding:13px 10px;
     font-weight:800;
-    transition:.2s;
 }
-.btn:hover{transform:translateY(-1px)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-start{background:linear-gradient(135deg,#2dd4e7,#2589ee);color:#06111a}
-.btn-stop{background:#252d3d;color:#dce4f0;border:1px solid #39445a}
+
+.btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+.btn-start{
+    background:linear-gradient(135deg,#2dd4e7,#2589ee);
+    color:#06111a;
+}
+
+.btn-stop{
+    background:#252d3d;
+    color:#dce4f0;
+    border:1px solid #39445a;
+}
+
 .btn-reset{
     background:rgba(255,91,120,.1);
     color:#ff8da1;
@@ -433,14 +537,13 @@ button{cursor:pointer}
     margin-top:10px;
 }
 
-/* =========================================================
-   STATS
-========================================================= */
+/* STATS */
 .stats-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:9px;
 }
+
 .stat{
     background:#191f2d;
     border:1px solid #2a3345;
@@ -448,30 +551,43 @@ button{cursor:pointer}
     padding:14px;
     text-align:center;
 }
+
 .stat-value{
     font-size:23px;
     font-weight:850;
     color:#69d9ef;
-    word-break:break-word;
 }
-.stat-label{font-size:10px;color:var(--muted);margin-top:7px;text-transform:uppercase;letter-spacing:.7px}
 
-/* =========================================================
-   CONFIG
-========================================================= */
-.setting{margin-bottom:15px}
+.stat-label{
+    font-size:10px;
+    color:var(--muted);
+    margin-top:7px;
+    text-transform:uppercase;
+}
+
+/* SETTINGS */
+.setting{
+    margin-bottom:15px;
+}
+
 .range-row{
     display:grid;
-    grid-template-columns:1fr 54px;
+    grid-template-columns:1fr 65px;
     gap:12px;
     align-items:center;
 }
-.range{width:100%;accent-color:var(--cyan)}
+
+.range{
+    width:100%;
+    accent-color:var(--cyan);
+}
+
 .range-value{
     font-family:monospace;
     color:var(--cyan);
     text-align:right;
 }
+
 .switch-row{
     display:flex;
     justify-content:space-between;
@@ -480,34 +596,50 @@ button{cursor:pointer}
     color:#b9c3d3;
     font-size:13px;
 }
-.switch{width:42px;height:23px;position:relative}
+
+.switch{
+    width:42px;
+    height:23px;
+    position:relative;
+}
+
 .switch input{display:none}
+
 .slider-toggle{
-    position:absolute;inset:0;
+    position:absolute;
+    inset:0;
     background:#30394a;
     border-radius:99px;
     cursor:pointer;
 }
+
 .slider-toggle:before{
     content:"";
     position:absolute;
-    width:17px;height:17px;
-    left:3px;top:3px;
+    width:17px;
+    height:17px;
+    left:3px;
+    top:3px;
     background:white;
     border-radius:50%;
     transition:.2s;
 }
-.switch input:checked + .slider-toggle{background:#168fa2}
-.switch input:checked + .slider-toggle:before{transform:translateX(19px)}
 
-/* =========================================================
-   DEAD ZONE INFO
-========================================================= */
+.switch input:checked + .slider-toggle{
+    background:#168fa2;
+}
+
+.switch input:checked + .slider-toggle:before{
+    transform:translateX(19px);
+}
+
+/* TOOLTIP */
 .deadzone-label{
     display:flex;
     align-items:center;
     gap:7px;
 }
+
 .info-tooltip{
     position:relative;
     display:inline-flex;
@@ -522,6 +654,7 @@ button{cursor:pointer}
     font-weight:800;
     cursor:help;
 }
+
 .tooltip-text{
     position:absolute;
     z-index:9999;
@@ -538,16 +671,13 @@ button{cursor:pointer}
     line-height:1.55;
     opacity:0;
     visibility:hidden;
-    pointer-events:none;
-    transform:translateY(5px);
-    transition:opacity .2s ease, transform .2s ease, visibility .2s ease;
-    box-shadow:0 12px 35px rgba(0,0,0,.45);
 }
+
 .info-tooltip:hover .tooltip-text{
     opacity:1;
     visibility:visible;
-    transform:translateY(0);
 }
+
 .setting-description{
     margin-top:7px;
     color:var(--muted);
@@ -555,16 +685,19 @@ button{cursor:pointer}
     line-height:1.4;
 }
 
-/* =========================================================
-   EVENTS
-========================================================= */
-.event-log{max-height:260px;overflow-y:auto}
+/* EVENTS */
+.event-log{
+    max-height:260px;
+    overflow-y:auto;
+}
+
 .empty-events{
     color:var(--muted);
     font-size:12px;
     text-align:center;
     padding:20px;
 }
+
 .event{
     display:grid;
     grid-template-columns:64px 40px 1fr;
@@ -577,8 +710,17 @@ button{cursor:pointer}
     border-left:3px solid var(--green);
     font-size:11px;
 }
-.event.out{border-color:var(--red);background:#241923}
-.event-time{font-family:monospace;color:var(--muted)}
+
+.event.out{
+    border-color:var(--red);
+    background:#241923;
+}
+
+.event-time{
+    font-family:monospace;
+    color:var(--muted);
+}
+
 .badge{
     font-weight:800;
     padding:5px 4px;
@@ -587,12 +729,20 @@ button{cursor:pointer}
     background:rgba(54,227,154,.12);
     color:var(--green);
 }
-.event.out .badge{background:rgba(255,91,120,.12);color:var(--red)}
-.event-detail{color:#b9c4d4}
 
+.event.out .badge{
+    background:rgba(255,91,120,.12);
+    color:var(--red);
+}
+
+.event-detail{
+    color:#b9c4d4;
+}
+
+/* TOAST */
 .toast{
     position:fixed;
-    z-index:99;
+    z-index:999;
     bottom:22px;
     left:50%;
     transform:translateX(-50%) translateY(20px);
@@ -605,51 +755,97 @@ button{cursor:pointer}
     pointer-events:none;
     transition:.25s;
     font-size:13px;
-    box-shadow:0 15px 40px rgba(0,0,0,.4);
 }
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.error{border-color:var(--red);color:#ffabb9}
 
+.toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+}
+
+.toast.error{
+    border-color:var(--red);
+    color:#ffabb9;
+}
+
+/* RESPONSIVE */
 @media(max-width:1180px){
     html,body{overflow:auto}
+
     .app{
-        height:auto;min-height:100vh;
+        height:auto;
+        min-height:100vh;
         grid-template-columns:1fr;
         grid-template-rows:auto minmax(480px,65vh) auto;
     }
-    .sidebar{overflow:visible;min-height:auto}
-    .nav-metrics{order:3;width:100%;justify-content:flex-start}
-    .header{flex-wrap:wrap}
+
+    .sidebar{
+        overflow:visible;
+    }
+
+    .header{
+        flex-wrap:wrap;
+    }
+
+    .nav-metrics{
+        order:3;
+        width:100%;
+        justify-content:flex-start;
+    }
 }
+
 @media(max-width:720px){
-    .app{padding:6px;gap:7px}
-    .header{padding:9px 11px}
-    .brand{font-size:17px}
-    .header-right{display:none}
-    .nav-metric{min-width:0;flex:1;padding:7px 8px}
-    .nav-metric.main{min-width:0}
-    .nav-metric-value{font-size:18px}
-    .nav-icon{display:none}
+    .app{
+        padding:6px;
+        gap:7px;
+    }
+
+    .header{
+        padding:9px 11px;
+    }
+
+    .brand{
+        font-size:17px;
+    }
+
+    .header-right{
+        display:none;
+    }
+
+    .nav-metric{
+        min-width:0;
+        flex:1;
+        padding:7px 8px;
+    }
+
+    .nav-metric.main{
+        min-width:0;
+    }
+
+    .nav-metric-value{
+        font-size:18px;
+    }
+
+    .nav-icon{
+        display:none;
+    }
 }
 </style>
 </head>
 
 <body>
+
 <div class="app">
 
-<!-- =====================================================
-     HEADER + LIVE COUNTS
-===================================================== -->
 <header class="header">
+
     <div class="brand">
         <div class="brand-icon">◉</div>
         <span>Vision <b>Counter</b></span>
     </div>
 
-    <!-- LIVE COUNT MOVED TO NAV BAR -->
     <div class="nav-metrics">
+
         <div class="nav-metric main">
-            <div class="nav-icon">◉</div>
             <div>
                 <div class="nav-metric-value" id="totalCount">0</div>
                 <div class="nav-metric-label">Current Occupancy</div>
@@ -657,7 +853,6 @@ button{cursor:pointer}
         </div>
 
         <div class="nav-metric in">
-            <div class="nav-icon">↓</div>
             <div>
                 <div class="nav-metric-value" id="inCount">0</div>
                 <div class="nav-metric-label">Entered</div>
@@ -665,7 +860,6 @@ button{cursor:pointer}
         </div>
 
         <div class="nav-metric out">
-            <div class="nav-icon">↑</div>
             <div>
                 <div class="nav-metric-value" id="outCount">0</div>
                 <div class="nav-metric-label">Exited</div>
@@ -678,6 +872,7 @@ button{cursor:pointer}
                 <div class="nav-metric-label">FPS</div>
             </div>
         </div>
+
     </div>
 
     <div class="header-right">
@@ -687,230 +882,341 @@ button{cursor:pointer}
         </div>
         <span>Human Segmentation</span>
     </div>
+
 </header>
 
-<!-- =====================================================
-     LARGE VIDEO
-===================================================== -->
+
+<!-- VIDEO -->
 <main class="workspace">
-    <section class="video-card">
 
-        <div class="video-topbar">
-            <div class="live-badge">
-                <i class="dot" id="liveDot"></i>
-                <span id="liveText">READY</span>
-            </div>
-            <div class="model-badge">YOLOv8n-SEG · PERSON ONLY</div>
+<section class="video-card">
+
+    <div class="video-topbar">
+        <div class="live-badge">
+            <i class="dot" id="liveDot"></i>
+            <span id="liveText">READY</span>
         </div>
 
-        <div class="video-wrap">
-            <img id="videoStream" alt="Live camera stream">
+        <div class="model-badge">
+            YOLOv8n-SEG · PERSON ONLY
+        </div>
+    </div>
 
-            <!-- Immediate boundary visual response -->
-            <div id="instantBoundary"></div>
+    <div class="video-wrap">
 
-            <div class="video-placeholder" id="videoPlaceholder">
-                <div>
-                    <div class="placeholder-icon">◉</div>
-                    <div class="placeholder-title">Live Vision System Ready</div>
-                    <div>Select a source and start streaming</div>
-                </div>
+        <!-- Processed backend result -->
+        <img id="videoStream" alt="Live processed stream">
+
+        <!-- Local raw preview before backend returns result -->
+        <video id="localVideo" autoplay muted playsinline></video>
+
+        <!-- Instant boundary -->
+        <div id="instantBoundary"></div>
+
+        <div class="video-placeholder" id="videoPlaceholder">
+            <div>
+                <div class="placeholder-icon">◉</div>
+                <div class="placeholder-title">Live Vision System Ready</div>
+                <div>Select a source and start streaming</div>
             </div>
         </div>
-    </section>
+
+    </div>
+
+</section>
+
 </main>
 
-<!-- =====================================================
-     RIGHT CONTROL PANEL
-===================================================== -->
+
+<!-- SIDEBAR -->
 <aside class="sidebar">
 
-    <!-- CAMERA & STREAM ALWAYS AT TOP -->
-    <section class="panel">
-        <div class="panel-title">Camera & Stream</div>
+<section class="panel">
 
-        <div class="source-grid">
-            <button class="source-type active" data-type="webcam">
-                <span>▣</span>Local Webcam
-            </button>
-            <button class="source-type" data-type="phone">
-                <span>◉</span>Phone Camera
-            </button>
-            <button class="source-type coming-soon" data-type="cctv" data-tooltip="Coming Soon · RTSP/IP CCTV streams will be available in the next integration" aria-label="CCTV Coming Soon">
-                <span>◌</span>CCTV <small>Coming Soon</small>
-            </button>
-            <button class="source-type coming-soon" data-type="video" data-tooltip="Coming Soon · Upload and analyze recorded video files" aria-label="Video File Coming Soon">
-                <span>▶</span>Video File <small>Coming Soon</small>
-            </button>
-        </div>
+<div class="panel-title">Camera & Stream</div>
 
-        <!-- WEBCAM -->
-        <div id="webcamFields">
-            <label class="field-label">Camera</label>
-            <select class="select" id="webcamSelect">
-                <option value="0">Camera 0 — Default Webcam</option>
-                <option value="1">Camera 1 — Secondary Camera</option>
-                <option value="2">Camera 2</option>
-            </select>
-            <div class="source-help">Select the webcam connected to this computer.</div>
-        </div>
+<div class="source-grid">
 
-        <!-- PHONE QR -->
-        <div id="phoneFields" class="hidden">
-            <div class="phone-pair">
-                <div class="pair-title">Connect Phone Camera</div>
-                <div class="pair-sub">
-                    Scan this QR code using your phone. The phone opens a secure camera page.
-                    After allowing camera permission, the live feed is sent to this Vision Counter.
-                </div>
-                <div class="qr-box" id="qrCode"></div>
-                <div class="pair-url" id="phoneUrlText">Preparing phone connection...</div>
-                <div class="phone-status" id="phoneStatus">Waiting for phone...</div>
-            </div>
-        </div>
+    <button class="source-type active" data-type="webcam">
+        <span>▣</span>
+        Local Webcam
+    </button>
 
-        <!-- CCTV -->
-        <div id="cctvFields" class="hidden">
-            <label class="field-label">Saved CCTV Stream</label>
-            <select class="select" id="cctvSelect">
-                <option value="">Select CCTV source</option>
-                <option value="cctv_1">CCTV Camera 1 — To be configured</option>
-                <option value="cctv_2">CCTV Camera 2 — To be configured</option>
-            </select>
-            <div class="source-help">
-                These are reserved dropdown slots. Later we can add your two RTSP/IP CCTV URLs in app.py securely.
-            </div>
-        </div>
+    <button class="source-type" data-type="phone">
+        <span>◉</span>
+        Phone Camera
+    </button>
 
-        <!-- VIDEO -->
-        <div id="videoFields" class="hidden">
-            <label class="field-label">Demo / Video Source</label>
-            <select class="select" id="videoSelect">
-                <option value="">Select video</option>
-                <option value="video_1">Demo Video 1 — To be configured</option>
-                <option value="video_2">Demo Video 2 — To be configured</option>
-            </select>
-            <div class="source-help">
-                Later you can give me two video files and we will map them to these dropdown options.
-            </div>
-        </div>
+    <button
+        class="source-type coming-soon"
+        data-type="cctv"
+        data-tooltip="CCTV integration will be available soon"
+    >
+        <span>◌</span>
+        CCTV
+        <small>Coming Soon</small>
+    </button>
 
-        <div class="actions">
-            <button class="btn btn-start" id="startBtn">▶ Start Stream</button>
-            <button class="btn btn-stop" id="stopBtn" disabled>■ Stop</button>
-        </div>
-    </section>
+    <button
+        class="source-type coming-soon"
+        data-type="video"
+        data-tooltip="Video file analysis will be available soon"
+    >
+        <span>▶</span>
+        Video File
+        <small>Coming Soon</small>
+    </button>
 
-    <!-- STATS -->
-    <section class="panel">
-        <div class="panel-title">System Stats</div>
-        <div class="stats-grid">
-            <div class="stat">
-                <div class="stat-value" id="activeTracks">0</div>
-                <div class="stat-label">Active Tracks</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="fpsStat">0.0</div>
-                <div class="stat-label">Processing FPS</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="linePos">50%</div>
-                <div class="stat-label">Boundary Position</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="modelName">YOLOv8n-SEG</div>
-                <div class="stat-label">Single Model</div>
-            </div>
-        </div>
-        <button class="btn btn-reset" id="resetBtn">↻ Reset Counts</button>
-    </section>
+</div>
 
-    <!-- CONFIGURATION -->
-    <section class="panel">
-        <div class="panel-title">Configuration</div>
 
-        <div class="setting">
-            <label class="field-label">Boundary Line Position</label>
-            <div class="range-row">
-                <input class="range" id="lineSlider" type="range" min="5" max="95" value="50">
-                <span class="range-value" id="lineValue">50%</span>
-            </div>
-        </div>
+<!-- WEBCAM -->
+<div id="webcamFields">
 
-        <div class="setting">
-            <label class="field-label">Person Detection Confidence</label>
-            <div class="range-row">
-                <input class="range" id="confSlider" type="range" min="10" max="90" value="45">
-                <span class="range-value" id="confValue">0.45</span>
-            </div>
-        </div>
+    <label class="field-label">Camera</label>
 
-        <!-- Boundary Stability / Dead Zone -->
-        <div class="setting">
-            <label class="field-label deadzone-label">
-                <span>Boundary Stability / Dead Zone</span>
-                <span class="info-tooltip">ⓘ
-                    <span class="tooltip-text">
-                        Creates a neutral safety area around the boundary line to prevent false counts caused by tracking jitter.
-                        A person must clearly move from one stable side, through this area, and reach the opposite side before
-                        a crossing is counted.
-                    </span>
-                </span>
-            </label>
+    <select class="select" id="webcamSelect">
+        <option value="">Detecting cameras...</option>
+    </select>
 
-            <div class="range-row">
-                <input class="range" id="hysteresisSlider" type="range" min="10" max="150" value="45">
-                <span class="range-value" id="hysteresisValue">45 px</span>
-            </div>
+    <div class="source-help">
+        Your webcam is captured directly by the browser and securely processed by Vision Counter.
+    </div>
 
-            <div class="setting-description">
-                Higher value = fewer false crossings · Lower value = faster sensitivity
-            </div>
-        </div>
+</div>
 
-        <div class="switch-row">
-            <span>Show Segmentation Masks</span>
-            <label class="switch">
-                <input type="checkbox" id="maskToggle" checked>
-                <span class="slider-toggle"></span>
-            </label>
-        </div>
 
-        <div class="switch-row">
-            <span>Show Person Track IDs</span>
-            <label class="switch">
-                <input type="checkbox" id="idToggle" checked>
-                <span class="slider-toggle"></span>
-            </label>
-        </div>
-    </section>
+<!-- PHONE -->
+<div id="phoneFields" class="hidden">
 
-    <!-- EVENTS -->
-    <section class="panel">
-        <div class="panel-title">Recent Events</div>
-        <div class="event-log" id="eventLog">
-            <div class="empty-events">Waiting for a validated human crossing...</div>
-        </div>
-    </section>
+<div class="phone-pair">
+
+    <div class="pair-title">Connect Phone Camera</div>
+
+    <div class="pair-sub">
+        Scan this QR code with your phone. Your phone camera will connect directly to the live Vision Counter pipeline.
+    </div>
+
+    <div class="qr-box" id="qrCode"></div>
+
+    <div class="pair-url" id="phoneUrlText">
+        Preparing phone connection...
+    </div>
+
+    <div class="phone-status" id="phoneStatus">
+        Waiting for phone...
+    </div>
+
+</div>
+
+</div>
+
+
+<div class="actions">
+
+    <button class="btn btn-start" id="startBtn">
+        ▶ Start Stream
+    </button>
+
+    <button class="btn btn-stop" id="stopBtn" disabled>
+        ■ Stop
+    </button>
+
+</div>
+
+</section>
+
+
+<!-- STATS -->
+<section class="panel">
+
+<div class="panel-title">System Stats</div>
+
+<div class="stats-grid">
+
+    <div class="stat">
+        <div class="stat-value" id="activeTracks">0</div>
+        <div class="stat-label">Active Tracks</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-value" id="fpsStat">0.0</div>
+        <div class="stat-label">Processing FPS</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-value" id="linePos">50%</div>
+        <div class="stat-label">Boundary Position</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-value" id="modelName">YOLOv8n-SEG</div>
+        <div class="stat-label">Single Model</div>
+    </div>
+
+</div>
+
+<button class="btn btn-reset" id="resetBtn">
+    ↻ Reset Counts
+</button>
+
+</section>
+
+
+<!-- CONFIG -->
+<section class="panel">
+
+<div class="panel-title">Configuration</div>
+
+<div class="setting">
+
+    <label class="field-label">Boundary Line Position</label>
+
+    <div class="range-row">
+
+        <input
+            class="range"
+            id="lineSlider"
+            type="range"
+            min="5"
+            max="95"
+            value="50"
+        >
+
+        <span class="range-value" id="lineValue">50%</span>
+
+    </div>
+
+</div>
+
+
+<div class="setting">
+
+    <label class="field-label">Person Detection Confidence</label>
+
+    <div class="range-row">
+
+        <input
+            class="range"
+            id="confSlider"
+            type="range"
+            min="10"
+            max="90"
+            value="45"
+        >
+
+        <span class="range-value" id="confValue">0.45</span>
+
+    </div>
+
+</div>
+
+
+<div class="setting">
+
+<label class="field-label deadzone-label">
+
+    <span>Boundary Stability / Dead Zone</span>
+
+    <span class="info-tooltip">
+
+        ⓘ
+
+        <span class="tooltip-text">
+            Creates a neutral safety area around the boundary line to prevent false counts caused by tracking jitter. A person must clearly move from one stable side to the other before a crossing is counted.
+        </span>
+
+    </span>
+
+</label>
+
+<div class="range-row">
+
+    <input
+        class="range"
+        id="hysteresisSlider"
+        type="range"
+        min="10"
+        max="150"
+        value="45"
+    >
+
+    <span class="range-value" id="hysteresisValue">45 px</span>
+
+</div>
+
+<div class="setting-description">
+    Higher value = fewer false crossings · Lower value = faster sensitivity
+</div>
+
+</div>
+
+
+<div class="switch-row">
+
+<span>Show Segmentation Masks</span>
+
+<label class="switch">
+    <input type="checkbox" id="maskToggle" checked>
+    <span class="slider-toggle"></span>
+</label>
+
+</div>
+
+
+<div class="switch-row">
+
+<span>Show Person Track IDs</span>
+
+<label class="switch">
+    <input type="checkbox" id="idToggle" checked>
+    <span class="slider-toggle"></span>
+</label>
+
+</div>
+
+</section>
+
+
+<!-- EVENTS -->
+<section class="panel">
+
+<div class="panel-title">Recent Events</div>
+
+<div class="event-log" id="eventLog">
+    <div class="empty-events">
+        Waiting for a validated human crossing...
+    </div>
+</div>
+
+</section>
 
 </aside>
+
 </div>
 
 <div class="toast" id="toast"></div>
 
+
 <script>
+
 /* =========================================================
    ELEMENTS
 ========================================================= */
+
 const $ = id => document.getElementById(id);
 
 const el = {
+
     video: $('videoStream'),
+    localVideo: $('localVideo'),
+
     placeholder: $('videoPlaceholder'),
     instantBoundary: $('instantBoundary'),
 
     statusDot: $('statusDot'),
     statusText: $('statusText'),
+
     liveDot: $('liveDot'),
     liveText: $('liveText'),
 
@@ -919,20 +1225,22 @@ const el = {
     reset: $('resetBtn'),
 
     webcamSelect: $('webcamSelect'),
-    cctvSelect: $('cctvSelect'),
-    videoSelect: $('videoSelect'),
 
     total: $('totalCount'),
     entered: $('inCount'),
     exited: $('outCount'),
+
     tracks: $('activeTracks'),
+
     fps: $('fpsDisplay'),
     fpsStat: $('fpsStat'),
+
     linePos: $('linePos'),
     model: $('modelName'),
 
     line: $('lineSlider'),
     lineValue: $('lineValue'),
+
     conf: $('confSlider'),
     confValue: $('confValue'),
 
@@ -943,444 +1251,1284 @@ const el = {
     ids: $('idToggle'),
 
     events: $('eventLog'),
+
     toast: $('toast'),
 
     qrCode: $('qrCode'),
     phoneUrlText: $('phoneUrlText'),
     phoneStatus: $('phoneStatus')
+
 };
 
+
+/* =========================================================
+   STATE
+========================================================= */
+
 let ws = null;
+
 let isStreaming = false;
+
 let currentSourceType = 'webcam';
+
 let lastEventKey = '';
+
 let lastCount = 0;
+
 let configTimer = null;
+
 let phoneURL = null;
 
+let localStream = null;
+
+let frameTimer = null;
+
+let frameCanvas = document.createElement('canvas');
+
+let frameContext = frameCanvas.getContext('2d', {
+    alpha:false
+});
+
+let phoneStatusTimer = null;
+
+
 /* =========================================================
-   UI HELPERS
+   HELPERS
 ========================================================= */
-function toast(message, error=false) {
+
+function toast(message, error=false){
+
     el.toast.textContent = message;
-    el.toast.className = 'toast show' + (error ? ' error' : '');
+
+    el.toast.className =
+        'toast show' + (error ? ' error' : '');
+
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => el.toast.className = 'toast', 3500);
+
+    toast.timer = setTimeout(()=>{
+        el.toast.className='toast';
+    },3500);
+
 }
 
-function setStatus(online, text) {
-    el.statusDot.classList.toggle('online', online);
-    el.liveDot.classList.toggle('online', online);
-    el.statusText.textContent = text;
-    el.liveText.textContent = isStreaming ? 'LIVE' : (online ? 'READY' : 'OFFLINE');
+
+function setStatus(online,text){
+
+    el.statusDot.classList.toggle('online',online);
+
+    el.liveDot.classList.toggle('online',online);
+
+    el.statusText.textContent=text;
+
+    el.liveText.textContent =
+        isStreaming ? 'LIVE' :
+        (online ? 'READY' : 'OFFLINE');
+
 }
 
-function wsURL() {
-    return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+
+function wsURL(){
+
+    return (
+        location.protocol === 'https:' ? 'wss://' : 'ws://'
+    ) + location.host + '/ws';
+
 }
+
 
 /* =========================================================
-   DEVICE-AWARE ENTRY
-   Desktop: full Vision Counter dashboard
-   Phone/tablet: automatically open the dedicated phone camera page.
-   The phone then acts as a remote camera for the same deployed application.
+   MOBILE AUTO ROUTE
 ========================================================= */
-(function autoRouteMobileCamera() {
-    const params = new URLSearchParams(window.location.search);
-    const isTouchDevice = navigator.maxTouchPoints > 0;
-    const mobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-    const compactScreen = Math.min(window.innerWidth, window.innerHeight) < 900;
-    const isMobileCameraDevice = (mobileUA || (isTouchDevice && compactScreen));
 
-    // ?desktop=1 always allows opening the dashboard on a tablet/phone.
-    if (isMobileCameraDevice && !params.has('desktop') && !window.location.pathname.endsWith('/phone')) {
-        window.location.replace('/phone');
+(function(){
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const mobile =
+        /Android|iPhone|iPad|iPod|Mobile/i
+        .test(navigator.userAgent);
+
+    if(
+        mobile &&
+        !params.has('desktop') &&
+        !location.pathname.endsWith('/phone')
+    ){
+        location.replace('/phone');
     }
+
 })();
+
 
 /* =========================================================
    WEBSOCKET
 ========================================================= */
-function connect() {
-    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+function connect(){
+
+    if(
+        ws &&
+        (
+            ws.readyState === WebSocket.OPEN ||
+            ws.readyState === WebSocket.CONNECTING
+        )
+    ){
+        return;
+    }
 
     ws = new WebSocket(wsURL());
 
-    ws.onopen = () => {
-        setStatus(true, 'Connected');
+
+    ws.onopen = ()=>{
+
+        setStatus(true,'Connected');
+
         sendConfigNow();
+
     };
 
-    ws.onmessage = event => {
-        try {
-            handleMessage(JSON.parse(event.data));
-        } catch (error) {
+
+    ws.onmessage = event=>{
+
+        try{
+
+            handleMessage(
+                JSON.parse(event.data)
+            );
+
+        }catch(error){
+
             console.error(error);
+
         }
+
     };
 
-    ws.onerror = () => setStatus(false, 'Connection Error');
 
-    ws.onclose = () => {
-        setStatus(false, 'Disconnected');
-        setTimeout(connect, 2000);
+    ws.onerror = ()=>{
+
+        setStatus(false,'Connection Error');
+
     };
+
+
+    ws.onclose = ()=>{
+
+        setStatus(false,'Disconnected');
+
+        isStreaming=false;
+
+        stopLocalCamera(false);
+
+        setTimeout(connect,2000);
+
+    };
+
 }
 
-function send(data) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-        toast('Connecting to server...', true);
+
+function send(data){
+
+    if(
+        !ws ||
+        ws.readyState !== WebSocket.OPEN
+    ){
+
         connect();
+
         return false;
+
     }
+
     ws.send(JSON.stringify(data));
+
     return true;
+
 }
+
 
 /* =========================================================
-   MESSAGE HANDLER
+   BACKEND MESSAGE
 ========================================================= */
-function handleMessage(data) {
-    if (data.type === 'frame') {
-        el.video.src = 'data:image/jpeg;base64,' + data.image;
-        el.placeholder.classList.add('hidden');
-        el.instantBoundary.classList.add('visible');
-        const stats = data.stats || {};
+
+function handleMessage(data){
+
+    if(data.type === 'frame'){
+
+        if(data.image){
+
+            el.video.src =
+                'data:image/jpeg;base64,' +
+                data.image;
+
+            el.video.style.display='block';
+
+            el.localVideo.style.display='none';
+
+            el.placeholder.classList.add('hidden');
+
+            el.instantBoundary.classList.add('visible');
+
+        }
+
+        const stats=data.stats || {};
+
         updateStats(stats);
 
-        // Recent Events can arrive either inside stats.events (current backend)
-        // or as a top-level events field. Support both without changing backend.
-        const events = data.events || stats.events;
-        if (Array.isArray(events)) {
+        const events =
+            data.events ||
+            stats.events;
+
+        if(Array.isArray(events)){
+
             updateEvents(events);
+
         }
+
     }
 
-    else if (data.type === 'status') {
-        if (data.status === 'started') {
-            isStreaming = true;
-            el.start.disabled = true;
-            el.stop.disabled = false;
-            setStatus(true, 'Streaming');
-            toast(data.message || 'Live stream started');
+
+    else if(data.type === 'status'){
+
+        if(
+            data.status === 'started' ||
+            data.status === 'connected'
+        ){
+
+            isStreaming=true;
+
+            el.start.disabled=true;
+
+            el.stop.disabled=false;
+
+            setStatus(true,'Streaming');
+
+            el.liveText.textContent='LIVE';
+
         }
 
-        if (data.status === 'stopped') {
-            isStreaming = false;
-            el.start.disabled = false;
-            el.stop.disabled = true;
-            el.liveText.textContent = 'STOPPED';
-            toast('Stream stopped');
+
+        if(data.status === 'stopped'){
+
+            isStreaming=false;
+
+            el.start.disabled=false;
+
+            el.stop.disabled=true;
+
+            el.liveText.textContent='STOPPED';
+
         }
 
-        if (data.status === 'reset') {
-            lastEventKey = '';
-            el.events.innerHTML = '<div class="empty-events">Waiting for a validated human crossing...</div>';
-            toast('Counters reset');
+
+        if(data.status === 'reset'){
+
+            lastEventKey='';
+
+            el.events.innerHTML=
+                '<div class="empty-events">' +
+                'Waiting for a validated human crossing...' +
+                '</div>';
+
         }
+
     }
 
-    else if (data.type === 'phone_status') {
-        if (data.status === 'connected') {
-            el.phoneStatus.textContent = '✓ Phone connected — camera is ready';
+
+    else if(data.type === 'phone_status'){
+
+        if(data.status === 'connected'){
+
+            el.phoneStatus.textContent =
+                '✓ Phone connected — Live stream active';
+
             el.phoneStatus.classList.add('connected');
-        } else {
-            el.phoneStatus.textContent = 'Waiting for phone...';
-            el.phoneStatus.classList.remove('connected');
+
+            isStreaming=true;
+
+            el.stop.disabled=false;
+
+            el.start.disabled=true;
+
         }
+
     }
 
-    else if (data.type === 'error') {
-        toast(data.message || 'Server error', true);
-        isStreaming = false;
-        el.start.disabled = false;
-        el.stop.disabled = true;
+
+    else if(data.type === 'error'){
+
+        toast(
+            data.message || 'Server error',
+            true
+        );
+
+        isStreaming=false;
+
+        el.start.disabled=false;
+
+        el.stop.disabled=true;
+
     }
+
 }
+
 
 /* =========================================================
    STATS
 ========================================================= */
-function updateStats(stats) {
-    const total = Number(stats.total_count ?? 0);
 
-    if (total !== lastCount) {
-        el.total.style.transform = 'scale(1.12)';
-        setTimeout(() => el.total.style.transform = '', 180);
-        lastCount = total;
+function updateStats(stats){
+
+    const total =
+        Number(stats.total_count ?? 0);
+
+    if(total !== lastCount){
+
+        el.total.style.transform='scale(1.12)';
+
+        setTimeout(()=>{
+            el.total.style.transform='';
+        },180);
+
+        lastCount=total;
+
     }
 
-    el.total.textContent = total;
-    el.entered.textContent = stats.in_count ?? 0;
-    el.exited.textContent = stats.out_count ?? 0;
-    el.tracks.textContent = stats.active_tracks ?? 0;
+    el.total.textContent=total;
 
-    const fps = Number(stats.fps ?? 0).toFixed(1);
-    el.fps.textContent = fps;
-    el.fpsStat.textContent = fps;
+    el.entered.textContent=
+        stats.in_count ?? 0;
 
-    const position = Math.round(stats.line_position ?? Number(el.line.value));
-    el.linePos.textContent = position + '%';
+    el.exited.textContent=
+        stats.out_count ?? 0;
 
-    if (stats.model) el.model.textContent = stats.model;
+    el.tracks.textContent=
+        stats.active_tracks ?? 0;
+
+
+    const fps =
+        Number(stats.fps ?? 0)
+        .toFixed(1);
+
+    el.fps.textContent=fps;
+
+    el.fpsStat.textContent=fps;
+
+
+    const position =
+        Math.round(
+            stats.line_position ??
+            Number(el.line.value)
+        );
+
+    el.linePos.textContent=
+        position + '%';
+
+
+    if(stats.model){
+
+        el.model.textContent=
+            stats.model;
+
+    }
+
 }
+
 
 /* =========================================================
    EVENTS
 ========================================================= */
-function updateEvents(events) {
-    if (!Array.isArray(events) || !events.length) return;
 
-    const latest = events[events.length - 1];
-    const key = [
+function updateEvents(events){
+
+    if(
+        !Array.isArray(events) ||
+        !events.length
+    ){
+        return;
+    }
+
+
+    const latest =
+        events[events.length-1];
+
+
+    const key=[
         latest.time,
         latest.direction,
         latest.track_id,
         latest.current_count
     ].join('|');
 
-    if (key === lastEventKey) return;
-    lastEventKey = key;
 
-    el.events.innerHTML = '';
+    if(key === lastEventKey){
+        return;
+    }
 
-    [...events].reverse().slice(0, 10).forEach(event => {
-        const direction = String(event.direction || '').toUpperCase();
-        const row = document.createElement('div');
+    lastEventKey=key;
 
-        row.className = 'event ' + (direction === 'OUT' ? 'out' : '');
+    el.events.innerHTML='';
 
-        row.innerHTML = `
-            <span class="event-time">${escapeHTML(event.time || '--:--:--')}</span>
-            <span class="badge">${escapeHTML(direction)}</span>
+
+    [...events]
+    .reverse()
+    .slice(0,10)
+    .forEach(event=>{
+
+        const direction =
+            String(
+                event.direction || ''
+            ).toUpperCase();
+
+
+        const row =
+            document.createElement('div');
+
+
+        row.className=
+            'event ' +
+            (
+                direction === 'OUT'
+                ? 'out'
+                : ''
+            );
+
+
+        row.innerHTML=`
+
+            <span class="event-time">
+                ${escapeHTML(event.time || '--:--:--')}
+            </span>
+
+            <span class="badge">
+                ${escapeHTML(direction)}
+            </span>
+
             <span class="event-detail">
                 Person #${escapeHTML(event.track_id)}
                 · Count ${escapeHTML(event.current_count)}
             </span>
+
         `;
 
+
         el.events.appendChild(row);
+
     });
+
 }
 
-function escapeHTML(value) {
-    const div = document.createElement('div');
-    div.textContent = String(value ?? '');
+
+function escapeHTML(value){
+
+    const div =
+        document.createElement('div');
+
+    div.textContent=
+        String(value ?? '');
+
     return div.innerHTML;
+
 }
+
 
 /* =========================================================
-   SOURCE UI
+   CAMERA DEVICE ENUMERATION
 ========================================================= */
-const sourcePanels = {
-    webcam: $('webcamFields'),
-    phone: $('phoneFields'),
-    cctv: $('cctvFields'),
-    video: $('videoFields')
-};
 
-document.querySelectorAll('.source-type').forEach(button => {
-    button.addEventListener('click', () => {
-        if (button.classList.contains('coming-soon')) {
-            toast(button.dataset.type === 'cctv'
-                ? 'CCTV integration is coming soon.'
-                : 'Video file analysis is coming soon.');
+async function loadCameras(){
+
+    try{
+
+        if(
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.enumerateDevices
+        ){
+            throw new Error('Camera API unavailable');
+        }
+
+
+        const devices =
+            await navigator.mediaDevices
+            .enumerateDevices();
+
+
+        const cameras =
+            devices.filter(
+                d=>d.kind==='videoinput'
+            );
+
+
+        el.webcamSelect.innerHTML='';
+
+
+        if(!cameras.length){
+
+            const option =
+                document.createElement('option');
+
+            option.value='';
+
+            option.textContent=
+                'No camera detected';
+
+            el.webcamSelect.appendChild(option);
+
+            return;
+
+        }
+
+
+        cameras.forEach((camera,index)=>{
+
+            const option =
+                document.createElement('option');
+
+            option.value=camera.deviceId;
+
+            option.textContent=
+                camera.label ||
+                `Camera ${index+1}`;
+
+            el.webcamSelect.appendChild(option);
+
+        });
+
+    }catch(error){
+
+        el.webcamSelect.innerHTML=
+            '<option value="">Default Camera</option>';
+
+    }
+
+}
+
+
+/* =========================================================
+   LOCAL WEBCAM
+   IMPORTANT:
+   Browser captures camera.
+   Frames are sent to backend.
+   Render never accesses cv2.VideoCapture(0).
+========================================================= */
+
+async function startLocalCamera(){
+
+    try{
+
+        if(
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ){
+            throw new Error(
+                'Camera access is not supported by this browser.'
+            );
+        }
+
+
+        stopLocalCamera(false);
+
+
+        const deviceId =
+            el.webcamSelect.value;
+
+
+        const constraints={
+
+            video:
+                deviceId
+                ? {
+                    deviceId:{
+                        exact:deviceId
+                    },
+                    width:{ideal:1280},
+                    height:{ideal:720}
+                }
+                : {
+                    width:{ideal:1280},
+                    height:{ideal:720}
+                },
+
+            audio:false
+
+        };
+
+
+        localStream =
+            await navigator.mediaDevices
+            .getUserMedia(constraints);
+
+
+        el.localVideo.srcObject=
+            localStream;
+
+
+        await el.localVideo.play();
+
+
+        el.localVideo.style.display='block';
+
+        el.video.style.display='none';
+
+        el.placeholder.classList.add('hidden');
+
+        el.instantBoundary.classList.add('visible');
+
+
+        isStreaming=true;
+
+        el.start.disabled=true;
+
+        el.stop.disabled=false;
+
+        setStatus(true,'Streaming');
+
+        el.liveText.textContent='LIVE';
+
+
+        send({
+            action:'start',
+            source:'__BROWSER_WEBCAM__'
+        });
+
+
+        sendConfigNow();
+
+
+        startFrameSending();
+
+
+    }catch(error){
+
+        console.error(error);
+
+        toast(
+            error.name === 'NotAllowedError'
+                ? 'Camera permission was denied. Please allow camera access.'
+                : 'Unable to start webcam: ' + error.message,
+            true
+        );
+
+        stopLocalCamera(false);
+
+    }
+
+}
+
+
+/* =========================================================
+   SEND LOCAL WEBCAM FRAMES
+========================================================= */
+
+function startFrameSending(){
+
+    stopFrameSending();
+
+
+    frameTimer=setInterval(()=>{
+
+        if(
+            !localStream ||
+            !ws ||
+            ws.readyState !== WebSocket.OPEN ||
+            el.localVideo.readyState < 2
+        ){
             return;
         }
-        document.querySelectorAll('.source-type').forEach(x => x.classList.remove('active'));
-        button.classList.add('active');
 
-        currentSourceType = button.dataset.type;
 
-        Object.values(sourcePanels).forEach(panel => panel.classList.add('hidden'));
-        sourcePanels[currentSourceType].classList.remove('hidden');
-
-        if (currentSourceType === 'phone') {
-            preparePhoneQR();
-            watchPhoneConnection();
-        } else if (phoneStatusTimer) {
-            clearInterval(phoneStatusTimer);
-            phoneStatusTimer = null;
+        if(ws.bufferedAmount > 800000){
+            return;
         }
-    });
-});
 
-/* =========================================================
-   INSTANT BOUNDARY MOVEMENT
-   Visual line moves immediately on every slider input.
-========================================================= */
-function moveBoundaryImmediately() {
-    const value = Number(el.line.value);
 
-    // Move immediately on browser UI
-    el.instantBoundary.style.left = value + '%';
+        const video =
+            el.localVideo;
 
-    el.lineValue.textContent = value + '%';
-    el.linePos.textContent = value + '%';
 
-    // Send backend update, debounced slightly.
-    clearTimeout(configTimer);
-    configTimer = setTimeout(sendConfigNow, 35);
+        if(
+            !video.videoWidth ||
+            !video.videoHeight
+        ){
+            return;
+        }
+
+
+        const maxWidth=640;
+
+        const scale=Math.min(
+            1,
+            maxWidth/video.videoWidth
+        );
+
+
+        frameCanvas.width=
+            Math.max(
+                2,
+                Math.round(
+                    video.videoWidth*scale
+                )
+            );
+
+
+        frameCanvas.height=
+            Math.max(
+                2,
+                Math.round(
+                    video.videoHeight*scale
+                )
+            );
+
+
+        frameContext.drawImage(
+            video,
+            0,
+            0,
+            frameCanvas.width,
+            frameCanvas.height
+        );
+
+
+        frameCanvas.toBlob(blob=>{
+
+            if(
+                blob &&
+                ws &&
+                ws.readyState === WebSocket.OPEN &&
+                ws.bufferedAmount < 800000
+            ){
+
+                ws.send(blob);
+
+            }
+
+        },
+        'image/jpeg',
+        0.75);
+
+
+    },80);
+
 }
 
-el.line.addEventListener('input', moveBoundaryImmediately);
+
+function stopFrameSending(){
+
+    if(frameTimer){
+
+        clearInterval(frameTimer);
+
+        frameTimer=null;
+
+    }
+
+}
+
+
+function stopLocalCamera(updateUI=true){
+
+    stopFrameSending();
+
+
+    if(localStream){
+
+        localStream
+        .getTracks()
+        .forEach(track=>track.stop());
+
+        localStream=null;
+
+    }
+
+
+    el.localVideo.srcObject=null;
+
+
+    if(updateUI){
+
+        el.localVideo.style.display='none';
+
+    }
+
+}
+
+
+/* =========================================================
+   SOURCE SWITCH
+========================================================= */
+
+document
+.querySelectorAll('.source-type')
+.forEach(button=>{
+
+    button.addEventListener('click',()=>{
+
+        if(
+            button.classList.contains('coming-soon')
+        ){
+
+            toast(
+                button.dataset.type === 'cctv'
+                ? 'CCTV integration is coming soon.'
+                : 'Video file analysis is coming soon.'
+            );
+
+            return;
+
+        }
+
+
+        document
+        .querySelectorAll('.source-type')
+        .forEach(x=>
+            x.classList.remove('active')
+        );
+
+
+        button.classList.add('active');
+
+
+        currentSourceType=
+            button.dataset.type;
+
+
+        $('webcamFields')
+            .classList.toggle(
+                'hidden',
+                currentSourceType !== 'webcam'
+            );
+
+
+        $('phoneFields')
+            .classList.toggle(
+                'hidden',
+                currentSourceType !== 'phone'
+            );
+
+
+        if(currentSourceType==='phone'){
+
+            preparePhoneQR();
+
+            watchPhoneConnection();
+
+        }else{
+
+            if(phoneStatusTimer){
+
+                clearInterval(phoneStatusTimer);
+
+                phoneStatusTimer=null;
+
+            }
+
+        }
+
+    });
+
+});
+
+
+/* =========================================================
+   BOUNDARY
+========================================================= */
+
+function moveBoundaryImmediately(){
+
+    const value=
+        Number(el.line.value);
+
+
+    el.instantBoundary.style.left=
+        value+'%';
+
+
+    el.instantBoundary.classList.add('visible');
+
+
+    el.lineValue.textContent=
+        value+'%';
+
+
+    el.linePos.textContent=
+        value+'%';
+
+
+    clearTimeout(configTimer);
+
+
+    configTimer=setTimeout(
+        sendConfigNow,
+        35
+    );
+
+}
+
+
+el.line.addEventListener(
+    'input',
+    moveBoundaryImmediately
+);
+
 
 /* =========================================================
    CONFIG
 ========================================================= */
-function sendConfigNow() {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+function sendConfigNow(){
+
+    if(
+        !ws ||
+        ws.readyState !== WebSocket.OPEN
+    ){
+        return;
+    }
+
 
     send({
-        action: 'config',
-        config: {
-            line_position: Number(el.line.value) / 100,
-            conf_threshold: Number(el.conf.value) / 100,
-            hysteresis: Number(el.hysteresis.value),
-            show_masks: el.masks.checked,
-            show_track_ids: el.ids.checked
+
+        action:'config',
+
+        config:{
+
+            line_position:
+                Number(el.line.value)/100,
+
+            conf_threshold:
+                Number(el.conf.value)/100,
+
+            hysteresis:
+                Number(el.hysteresis.value),
+
+            show_masks:
+                el.masks.checked,
+
+            show_track_ids:
+                el.ids.checked
+
         }
+
     });
+
 }
 
-el.conf.addEventListener('input', () => {
-    el.confValue.textContent = (Number(el.conf.value) / 100).toFixed(2);
-    clearTimeout(configTimer);
-    configTimer = setTimeout(sendConfigNow, 80);
-});
 
-el.hysteresis.addEventListener('input', () => {
-    el.hysteresisValue.textContent = el.hysteresis.value + ' px';
-    clearTimeout(configTimer);
-    configTimer = setTimeout(sendConfigNow, 80);
-});
+el.conf.addEventListener(
+    'input',
+    ()=>{
 
-el.masks.addEventListener('change', sendConfigNow);
-el.ids.addEventListener('change', sendConfigNow);
+        el.confValue.textContent=
+            (
+                Number(el.conf.value)/100
+            ).toFixed(2);
+
+
+        clearTimeout(configTimer);
+
+        configTimer=setTimeout(
+            sendConfigNow,
+            80
+        );
+
+    }
+);
+
+
+el.hysteresis.addEventListener(
+    'input',
+    ()=>{
+
+        el.hysteresisValue.textContent=
+            el.hysteresis.value+' px';
+
+
+        clearTimeout(configTimer);
+
+        configTimer=setTimeout(
+            sendConfigNow,
+            80
+        );
+
+    }
+);
+
+
+el.masks.addEventListener(
+    'change',
+    sendConfigNow
+);
+
+
+el.ids.addEventListener(
+    'change',
+    sendConfigNow
+);
+
 
 /* =========================================================
    PHONE QR
-   Backend should provide /api/phone-url.
-   Fallback uses current host when dashboard is already opened
-   through the PC LAN IP.
 ========================================================= */
-async function preparePhoneQR() {
-    try {
-        const response = await fetch('/api/phone-url', {cache: 'no-store'});
 
-        if (response.ok) {
-            const data = await response.json();
-            phoneURL = data.url;
-        } else {
-            throw new Error('phone-url endpoint unavailable');
+async function preparePhoneQR(){
+
+    try{
+
+        const response=
+            await fetch(
+                '/api/phone-url',
+                {cache:'no-store'}
+            );
+
+
+        if(response.ok){
+
+            const data=
+                await response.json();
+
+            phoneURL=data.url;
+
+        }else{
+
+            throw new Error();
+
         }
-    } catch (error) {
-        const protocol = location.protocol;
-        phoneURL = protocol + '//' + location.host + '/phone';
+
+    }catch(error){
+
+        phoneURL=
+            location.origin+'/phone';
+
     }
 
-    el.phoneUrlText.textContent = phoneURL;
-    el.phoneStatus.textContent = 'Scan QR code and allow camera permission';
-    el.phoneStatus.classList.remove('connected');
 
-    el.qrCode.innerHTML = '';
+    el.phoneUrlText.textContent=
+        phoneURL;
 
-    if (window.QRCode) {
-        new QRCode(el.qrCode, {
-            text: phoneURL,
-            width: 164,
-            height: 164,
-            correctLevel: QRCode.CorrectLevel.M
-        });
-    } else {
-        el.qrCode.innerHTML = '<div style="color:#111;font-size:11px;padding:10px">QR library unavailable.<br>Open the URL below on your phone.</div>';
-    }
-}
 
-let phoneStatusTimer = null;
+    el.phoneStatus.textContent=
+        'Scan QR code and allow camera permission';
 
-function watchPhoneConnection() {
-    clearInterval(phoneStatusTimer);
-    phoneStatusTimer = setInterval(async () => {
-        if (currentSourceType !== 'phone') return;
-        try {
-            const response = await fetch('/api/phone-status', {cache: 'no-store'});
-            if (!response.ok) return;
-            const data = await response.json();
-            if (data.connected) {
-                el.phoneStatus.textContent = 'Phone connected · Live stream active';
-                el.phoneStatus.classList.add('connected');
-                el.start.disabled = true;
-                el.stop.disabled = false;
-                isStreaming = true;
-                el.liveText.textContent = 'LIVE';
+
+    el.phoneStatus
+        .classList.remove('connected');
+
+
+    el.qrCode.innerHTML='';
+
+
+    if(window.QRCode){
+
+        new QRCode(
+            el.qrCode,
+            {
+                text:phoneURL,
+                width:164,
+                height:164,
+                correctLevel:
+                    QRCode.CorrectLevel.M
             }
-        } catch (error) {}
-    }, 1000);
+        );
+
+    }
+
 }
+
 
 /* =========================================================
-   START / STOP
+   PHONE STATUS
 ========================================================= */
-function getSelectedSource() {
-    if (currentSourceType === 'webcam') {
-        return el.webcamSelect.value;
-    }
 
-    if (currentSourceType === 'phone') {
-        return '__PHONE_CAMERA__';
-    }
+function watchPhoneConnection(){
 
-    if (currentSourceType === 'cctv') {
-        return el.cctvSelect.value;
-    }
+    clearInterval(phoneStatusTimer);
 
-    if (currentSourceType === 'video') {
-        return el.videoSelect.value;
-    }
 
-    return '';
+    phoneStatusTimer=setInterval(
+        async()=>{
+
+            if(
+                currentSourceType !== 'phone'
+            ){
+                return;
+            }
+
+
+            try{
+
+                const response=
+                    await fetch(
+                        '/api/phone-status',
+                        {cache:'no-store'}
+                    );
+
+
+                if(!response.ok){
+                    return;
+                }
+
+
+                const data=
+                    await response.json();
+
+
+                if(data.connected){
+
+                    el.phoneStatus.textContent=
+                        '✓ Phone connected · Live stream active';
+
+
+                    el.phoneStatus
+                        .classList.add('connected');
+
+
+                    isStreaming=true;
+
+                    el.start.disabled=true;
+
+                    el.stop.disabled=false;
+
+                    el.liveText.textContent='LIVE';
+
+                }
+
+            }catch(error){}
+
+        },
+        1000
+    );
+
 }
 
-el.start.addEventListener('click', () => {
-    const source = getSelectedSource();
-
-    if (currentSourceType === 'phone') {
-        preparePhoneQR();
-        toast('Scan the QR code. The phone page uses the back camera by default and can be flipped.');
-        return;
-    }
-
-    if (!source) {
-        toast('Please select a source.', true);
-        return;
-    }
-
-    if (source.startsWith('cctv_') || source.startsWith('video_')) {
-        toast('This source slot is ready in the UI. We will map your actual CCTV/video files next.', true);
-        return;
-    }
-
-    if (send({action: 'start', source})) {
-        sendConfigNow();
-        el.start.disabled = true;
-        el.liveText.textContent = 'STARTING';
-    }
-});
-
-el.stop.addEventListener('click', () => {
-    send({action: 'stop'});
-});
-
-el.reset.addEventListener('click', () => {
-    send({action: 'reset'});
-});
 
 /* =========================================================
    START
 ========================================================= */
+
+el.start.addEventListener(
+    'click',
+    async()=>{
+
+        if(currentSourceType==='webcam'){
+
+            await startLocalCamera();
+
+            return;
+
+        }
+
+
+        if(currentSourceType==='phone'){
+
+            preparePhoneQR();
+
+            watchPhoneConnection();
+
+            toast(
+                'Scan the QR code and allow camera permission on your phone.'
+            );
+
+            return;
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   STOP
+========================================================= */
+
+el.stop.addEventListener(
+    'click',
+    ()=>{
+
+        stopLocalCamera();
+
+        send({
+            action:'stop'
+        });
+
+
+        isStreaming=false;
+
+        el.start.disabled=false;
+
+        el.stop.disabled=true;
+
+        el.liveText.textContent='STOPPED';
+
+    }
+);
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+el.reset.addEventListener(
+    'click',
+    ()=>{
+
+        send({
+            action:'reset'
+        });
+
+    }
+);
+
+
+/* =========================================================
+   CAMERA CHANGE
+========================================================= */
+
+el.webcamSelect.addEventListener(
+    'change',
+    ()=>{
+
+        if(
+            isStreaming &&
+            currentSourceType==='webcam'
+        ){
+
+            toast(
+                'Stop the stream before switching camera.'
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
 moveBoundaryImmediately();
+
 connect();
+
+loadCameras();
+
+
+/* Refresh camera list after permission */
+navigator.mediaDevices?.addEventListener?.(
+    'devicechange',
+    loadCameras
+);
+
+
+window.addEventListener(
+    'beforeunload',
+    ()=>{
+
+        stopLocalCamera(false);
+
+    }
+);
+
 </script>
+
 </body>
 </html>
