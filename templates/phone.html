@@ -5,15 +5,14 @@
 
 <meta
     name="viewport"
-    content="width=device-width,initial-scale=1,viewport-fit=cover"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
 >
 
 <meta name="theme-color" content="#08111d">
 
-<title>Vision Counter · Mobile Camera</title>
+<title>Vision Counter · Mobile</title>
 
 <style>
-
 :root{
     --bg:#08111d;
     --panel:#101b2a;
@@ -24,8 +23,8 @@
     --cyan:#2dd4e7;
     --blue:#2589ee;
     --green:#36e39a;
+    --yellow:#ffd84d;
     --red:#ff637e;
-    --orange:#ffb454;
 }
 
 *{
@@ -36,6 +35,7 @@
 html,
 body{
     margin:0;
+    width:100%;
     min-height:100%;
     background:var(--bg);
     color:var(--text);
@@ -54,31 +54,27 @@ body{
 }
 
 .app{
+    width:100%;
     min-height:100svh;
     display:flex;
     flex-direction:column;
+    gap:14px;
 
     padding:
-        max(14px,env(safe-area-inset-top))
+        max(14px, env(safe-area-inset-top))
         14px
-        max(18px,env(safe-area-inset-bottom));
-
-    gap:12px;
-
-    max-width:850px;
-    margin:auto;
+        max(16px, env(safe-area-inset-bottom));
 }
 
-
-/* =========================================================
+/* =========================
    HEADER
-========================================================= */
+========================= */
 
 .header{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
+    gap:10px;
 }
 
 .brand{
@@ -89,7 +85,7 @@ body{
 
 .brand-title{
     font-size:18px;
-    font-weight:850;
+    font-weight:800;
     letter-spacing:-.4px;
 }
 
@@ -98,9 +94,9 @@ body{
 }
 
 .brand-sub{
-    color:var(--muted);
     font-size:10px;
-    letter-spacing:1px;
+    color:var(--muted);
+    letter-spacing:.8px;
     text-transform:uppercase;
 }
 
@@ -108,10 +104,8 @@ body{
     display:flex;
     align-items:center;
     gap:7px;
-
     font-size:11px;
     color:var(--muted);
-
     white-space:nowrap;
 }
 
@@ -125,302 +119,303 @@ body{
 
 .dot.on{
     background:var(--green);
-    box-shadow:
-        0 0 8px rgba(54,227,154,.9),
-        0 0 16px rgba(54,227,154,.4);
+    box-shadow:0 0 12px rgba(54,227,154,.8);
 }
 
-.dot.err{
+.dot.error{
     background:var(--red);
-    box-shadow:
-        0 0 10px rgba(255,99,126,.6);
+    box-shadow:0 0 12px rgba(255,99,126,.7);
 }
 
-
-/* =========================================================
+/* =========================
    CAMERA
-========================================================= */
+========================= */
 
-.camera{
+.camera-wrap{
     position:relative;
-
     width:100%;
+    aspect-ratio:9/16;
 
-    min-height:380px;
-
-    flex:1;
-
-    overflow:hidden;
-
-    border-radius:20px;
+    max-height:68svh;
 
     background:#020407;
-
     border:1px solid var(--border);
+    border-radius:22px;
+    overflow:hidden;
 
     box-shadow:
         0 16px 45px rgba(0,0,0,.35);
 }
 
-
-/* Raw camera */
-
-.camera video{
-
+#rawVideo,
+#processedFrame{
     position:absolute;
-
     inset:0;
 
     width:100%;
-
     height:100%;
 
     object-fit:cover;
-
-    z-index:1;
 }
 
+/* Raw camera stays hidden after processed stream starts */
 
-/* Processed YOLO frame */
+#rawVideo{
+    background:#020407;
+}
 
-.camera #processedFrame{
-
-    position:absolute;
-
-    inset:0;
-
-    width:100%;
-
-    height:100%;
-
-    object-fit:cover;
-
-    z-index:2;
-
+#processedFrame{
     display:none;
+    background:#020407;
 }
 
+.camera-wrap.processed #rawVideo{
+    opacity:0;
+}
 
-/* Mirror only front camera */
+.camera-wrap.processed #processedFrame{
+    display:block;
+}
 
-.camera.front video{
+/* Front camera mirror */
+
+.camera-wrap.front #rawVideo,
+.camera-wrap.front #processedFrame{
     transform:scaleX(-1);
 }
 
+/* =========================
+   CAMERA BADGES
+========================= */
 
-/* =========================================================
-   CAMERA OVERLAYS
-========================================================= */
-
-.camera-top{
-
+.live-badge{
     position:absolute;
-
-    z-index:10;
+    z-index:20;
 
     top:12px;
-
     left:12px;
 
-    right:12px;
-
     display:flex;
-
     align-items:center;
-
-    justify-content:space-between;
-
-    gap:10px;
-
-    pointer-events:none;
-}
-
-
-.badge{
-
-    display:inline-flex;
-
-    align-items:center;
-
     gap:7px;
 
-    background:
-        rgba(4,10,16,.78);
-
-    backdrop-filter:
-        blur(10px);
-
-    border:
-        1px solid rgba(255,255,255,.12);
-
-    padding:
-        7px 10px;
+    padding:7px 10px;
 
     border-radius:999px;
 
+    background:rgba(4,10,16,.76);
+    backdrop-filter:blur(10px);
+
+    border:1px solid rgba(255,255,255,.13);
+
     font-size:10px;
-
-    letter-spacing:1px;
-
     font-weight:800;
+    letter-spacing:1px;
 }
 
-
 .live-dot{
-
     width:7px;
-
     height:7px;
+    border-radius:50%;
+    background:var(--red);
+}
+
+.live-dot.active{
+    background:var(--green);
+    box-shadow:0 0 10px rgba(54,227,154,.9);
+}
+
+.ai-badge{
+    position:absolute;
+    z-index:20;
+
+    top:12px;
+    right:12px;
+
+    padding:7px 10px;
+
+    border-radius:999px;
+
+    background:rgba(4,10,16,.76);
+    backdrop-filter:blur(10px);
+
+    border:1px solid rgba(255,255,255,.13);
+
+    font-size:9px;
+    color:var(--cyan);
+    font-weight:800;
+    letter-spacing:.8px;
+}
+
+/* =========================
+   BOUNDARY LINE
+========================= */
+
+.boundary-line{
+    position:absolute;
+    z-index:30;
+
+    left:5%;
+    width:90%;
+
+    top:50%;
+
+    height:4px;
+
+    background:var(--yellow);
+
+    border-radius:999px;
+
+    box-shadow:
+        0 0 10px rgba(255,216,77,.8),
+        0 0 20px rgba(255,216,77,.4);
+
+    cursor:ns-resize;
+
+    touch-action:none;
+
+    transition:none;
+}
+
+.boundary-line::before,
+.boundary-line::after{
+    content:"";
+
+    position:absolute;
+
+    top:50%;
+
+    width:14px;
+    height:14px;
 
     border-radius:50%;
 
-    background:var(--red);
+    background:var(--yellow);
 
-    box-shadow:
-        0 0 8px rgba(255,99,126,.8);
+    transform:translateY(-50%);
+
+    box-shadow:0 0 10px rgba(255,216,77,.8);
 }
 
-
-.ai-badge{
-
-    background:
-        rgba(4,10,16,.78);
-
-    backdrop-filter:
-        blur(10px);
-
-    border:
-        1px solid rgba(255,255,255,.12);
-
-    padding:
-        7px 10px;
-
-    border-radius:999px;
-
-    font-size:10px;
-
-    color:var(--muted);
-
-    font-weight:700;
+.boundary-line::before{
+    left:-5px;
 }
 
-
-.ai-badge.active{
-
-    color:var(--green);
-
-    border-color:
-        rgba(54,227,154,.35);
+.boundary-line::after{
+    right:-5px;
 }
 
-
-/* =========================================================
-   BOTTOM CAMERA STATUS
-========================================================= */
-
-.camera-bottom{
-
+.boundary-label{
     position:absolute;
 
-    z-index:10;
+    right:0;
+    bottom:10px;
 
-    bottom:12px;
+    padding:5px 8px;
 
-    left:12px;
+    border-radius:7px;
 
-    right:12px;
+    background:rgba(0,0,0,.7);
+
+    color:#fff4b0;
+
+    font-size:9px;
+    font-weight:800;
+
+    letter-spacing:.5px;
+}
+
+/* =========================
+   CAMERA PLACEHOLDER
+========================= */
+
+.camera-placeholder{
+    position:absolute;
+    inset:0;
 
     display:flex;
+    flex-direction:column;
 
-    justify-content:space-between;
+    align-items:center;
+    justify-content:center;
 
-    align-items:flex-end;
-
-    pointer-events:none;
-}
-
-
-.processing{
-
-    background:
-        rgba(4,10,16,.75);
-
-    backdrop-filter:
-        blur(10px);
-
-    border:
-        1px solid rgba(255,255,255,.1);
-
-    padding:
-        8px 10px;
-
-    border-radius:10px;
-
-    font-size:10px;
+    gap:12px;
 
     color:var(--muted);
-}
 
+    text-align:center;
 
-.fps-badge{
+    padding:30px;
 
     background:
-        rgba(4,10,16,.75);
-
-    backdrop-filter:
-        blur(10px);
-
-    border:
-        1px solid rgba(255,255,255,.1);
-
-    padding:
-        8px 10px;
-
-    border-radius:10px;
-
-    font-size:11px;
-
-    font-weight:800;
+        radial-gradient(
+            circle at center,
+            rgba(45,212,231,.06),
+            transparent 60%
+        );
 }
 
+.camera-placeholder.hidden{
+    display:none;
+}
 
-/* =========================================================
-   STATS
-========================================================= */
-
-.stats{
+.camera-icon{
+    width:60px;
+    height:60px;
 
     display:grid;
+    place-items:center;
 
-    grid-template-columns:
-        repeat(4,1fr);
+    border-radius:18px;
 
-    gap:8px;
+    background:var(--panel);
+
+    border:1px solid var(--border);
+
+    font-size:27px;
 }
 
+.camera-placeholder strong{
+    color:var(--text);
+    font-size:15px;
+}
+
+.camera-placeholder span{
+    font-size:12px;
+    line-height:1.5;
+    max-width:250px;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:9px;
+}
 
 .stat{
+    background:var(--panel);
 
-    background:
-        var(--panel);
+    border:1px solid var(--border);
 
-    border:
-        1px solid var(--border);
+    border-radius:15px;
 
-    border-radius:14px;
-
-    padding:
-        11px 8px;
-
-    min-width:0;
+    padding:12px 8px;
 
     text-align:center;
 }
 
+.stat-value{
+    font-size:23px;
+    font-weight:850;
+    line-height:1.1;
+}
 
 .stat-label{
-
-    display:block;
+    margin-top:5px;
 
     color:var(--muted);
 
@@ -429,29 +424,6 @@ body{
     text-transform:uppercase;
 
     letter-spacing:.7px;
-
-    margin-bottom:5px;
-
-    white-space:nowrap;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-}
-
-
-.stat-value{
-
-    font-size:20px;
-
-    font-weight:850;
-
-    letter-spacing:-.5px;
-}
-
-
-.stat.live .stat-value{
-    color:var(--cyan);
 }
 
 .stat.in .stat-value{
@@ -462,38 +434,26 @@ body{
     color:var(--red);
 }
 
-.stat.fps .stat-value{
-    color:var(--orange);
-}
-
-
-/* =========================================================
+/* =========================
    CONTROLS
-========================================================= */
+========================= */
 
 .controls{
-
     display:grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
+    grid-template-columns:1fr 1fr;
     gap:10px;
 }
 
-
 .btn{
-
-    border:0;
+    min-height:54px;
 
     border-radius:14px;
 
-    padding:15px 10px;
+    border:none;
 
-    min-height:54px;
+    padding:12px 10px;
 
     font-size:14px;
-
     font-weight:800;
 
     cursor:pointer;
@@ -501,18 +461,14 @@ body{
     transition:
         transform .15s ease,
         opacity .15s ease;
-
-    touch-action:manipulation;
 }
 
-
 .btn:active{
-
     transform:scale(.97);
 }
 
-
-.primary{
+.btn.primary{
+    color:#06121d;
 
     background:
         linear-gradient(
@@ -520,147 +476,111 @@ body{
             var(--cyan),
             var(--blue)
         );
-
-    color:#06121d;
 }
 
-
-.secondary{
-
-    background:
-        #172334;
-
-    border:
-        1px solid #30435a;
-
+.btn.secondary{
     color:var(--text);
+
+    background:var(--panel2);
+
+    border:1px solid #30435a;
 }
 
+.btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
 
-/* =========================================================
-   EVENTS
-========================================================= */
+/* =========================
+   RECENT EVENTS
+========================= */
 
 .events-panel{
+    background:var(--panel);
 
-    background:
-        var(--panel);
-
-    border:
-        1px solid var(--border);
+    border:1px solid var(--border);
 
     border-radius:16px;
 
     overflow:hidden;
 }
 
-
 .events-header{
-
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
 
-    padding:
-        12px 14px;
+    padding:13px 14px;
 
-    border-bottom:
-        1px solid var(--border);
+    border-bottom:1px solid var(--border);
 }
 
-
 .events-title{
-
     font-size:12px;
-
     font-weight:800;
 }
 
-
 .events-count{
-
     font-size:10px;
-
     color:var(--muted);
 }
 
-
-.events-list{
-
-    max-height:150px;
+.events{
+    max-height:160px;
 
     overflow-y:auto;
+
+    padding:6px;
 }
 
-
 .event{
-
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
 
     gap:10px;
 
-    padding:
-        10px 14px;
+    padding:9px 8px;
 
-    border-bottom:
-        1px solid rgba(255,255,255,.05);
+    border-radius:10px;
 
     font-size:11px;
 }
 
-
-.event:last-child{
-    border-bottom:0;
+.event + .event{
+    border-top:1px solid rgba(255,255,255,.05);
 }
-
-
-.event-left{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:8px;
-}
-
 
 .event-type{
+    display:flex;
+    align-items:center;
+    gap:8px;
 
-    width:8px;
+    font-weight:700;
+}
 
-    height:8px;
+.event-direction{
+    width:7px;
+    height:7px;
 
     border-radius:50%;
 }
 
-
-.event-type.in{
+.event-direction.in{
     background:var(--green);
 }
 
-
-.event-type.out{
+.event-direction.out{
     background:var(--red);
 }
 
-
 .event-time{
-
     color:var(--muted);
-
     font-size:10px;
 }
 
-
-.empty-events{
-
-    padding:18px;
+.no-events{
+    padding:20px 10px;
 
     text-align:center;
 
@@ -669,275 +589,204 @@ body{
     font-size:11px;
 }
 
-
-/* =========================================================
-   HINT
-========================================================= */
+/* =========================
+   FOOTER HINT
+========================= */
 
 .hint{
-
     text-align:center;
 
     color:var(--muted);
 
     font-size:11px;
 
-    line-height:1.5;
+    line-height:1.55;
 
-    padding:
-        0 8px 4px;
+    padding:0 10px;
 }
-
 
 .hint.error{
     color:#ffb0bd;
 }
 
+/* =========================
+   SMALL MOBILE
+========================= */
 
-/* =========================================================
-   MOBILE
-========================================================= */
+@media(max-width:380px){
 
-@media(max-width:480px){
-
-    .app{
-        padding-left:10px;
-        padding-right:10px;
-    }
-
-    .camera{
-        min-height:420px;
-        border-radius:16px;
-    }
-
-    .stats{
-        gap:6px;
-    }
-
-    .stat{
-        padding:10px 4px;
+    .camera-wrap{
+        max-height:60svh;
     }
 
     .stat-value{
-        font-size:18px;
+        font-size:20px;
+    }
+
+    .brand-title{
+        font-size:16px;
     }
 
 }
-
-
-@media(min-width:700px){
-
-    .camera{
-        min-height:560px;
-    }
-
-    .app{
-        padding-top:22px;
-    }
-
-}
-
 </style>
 </head>
-
 
 <body>
 
 <div class="app">
 
-
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
+    <!-- HEADER -->
 
     <div class="header">
 
         <div class="brand">
-
             <div class="brand-title">
                 Vision <b>Counter</b>
             </div>
 
             <div class="brand-sub">
-                Remote AI Camera
+                AI Person Analytics
             </div>
-
         </div>
 
-
         <div class="status">
-
-            <span
-                id="dot"
-                class="dot"
-            ></span>
-
-            <span id="status">
-                Preparing camera
-            </span>
-
+            <span id="statusDot" class="dot"></span>
+            <span id="statusText">Preparing</span>
         </div>
 
     </div>
 
 
-
-    <!-- =====================================================
-         CAMERA
-    ====================================================== -->
+    <!-- CAMERA -->
 
     <div
-        id="cameraBox"
-        class="camera"
+        id="cameraWrap"
+        class="camera-wrap"
     >
 
-
-        <!-- RAW PHONE CAMERA -->
-
         <video
-            id="video"
+            id="rawVideo"
             autoplay
             playsinline
             muted
         ></video>
 
 
-        <!-- PROCESSED YOLO FRAME -->
-
         <img
             id="processedFrame"
-            alt="AI processed camera stream"
+            alt="AI processed stream"
         >
 
 
-        <!-- TOP OVERLAY -->
+        <div
+            id="cameraPlaceholder"
+            class="camera-placeholder"
+        >
 
-        <div class="camera-top">
+            <div class="camera-icon">📷</div>
 
-            <div class="badge">
+            <strong>Phone Camera Ready</strong>
 
-                <span class="live-dot"></span>
-
-                LIVE CAMERA
-
-            </div>
-
-
-            <div
-                id="aiBadge"
-                class="ai-badge"
-            >
-                AI CONNECTING
-            </div>
+            <span>
+                Enable your camera to start live
+                person detection and counting.
+            </span>
 
         </div>
 
 
+        <!-- LIVE BADGE -->
 
-        <!-- BOTTOM OVERLAY -->
+        <div class="live-badge">
 
-        <div class="camera-bottom">
+            <span
+                id="liveDot"
+                class="live-dot"
+            ></span>
 
-            <div
-                id="processingText"
-                class="processing"
-            >
-                Waiting for AI frames...
-            </div>
-
-
-            <div
-                id="fpsBadge"
-                class="fps-badge"
-            >
-                0 FPS
-            </div>
+            <span id="liveText">
+                OFFLINE
+            </span>
 
         </div>
 
+
+        <!-- AI BADGE -->
+
+        <div class="ai-badge">
+            YOLO · PERSON ONLY
+        </div>
+
+
+        <!-- BOUNDARY -->
+
+        <div
+            id="boundaryLine"
+            class="boundary-line"
+        >
+            <div class="boundary-label">
+                COUNTING LINE
+            </div>
+        </div>
 
     </div>
 
 
-
-    <!-- =====================================================
-         LIVE STATS
-    ====================================================== -->
+    <!-- STATS -->
 
     <div class="stats">
 
+        <div class="stat">
 
-        <div class="stat live">
-
-            <span class="stat-label">
-                Live Count
-            </span>
-
-            <span
-                id="liveCount"
+            <div
+                id="currentCount"
                 class="stat-value"
             >
                 0
-            </span>
+            </div>
+
+            <div class="stat-label">
+                Current
+            </div>
 
         </div>
 
 
         <div class="stat in">
 
-            <span class="stat-label">
-                Total IN
-            </span>
-
-            <span
+            <div
                 id="inCount"
                 class="stat-value"
             >
                 0
-            </span>
+            </div>
+
+            <div class="stat-label">
+                Entered
+            </div>
 
         </div>
 
 
         <div class="stat out">
 
-            <span class="stat-label">
-                Total OUT
-            </span>
-
-            <span
+            <div
                 id="outCount"
                 class="stat-value"
             >
                 0
-            </span>
+            </div>
+
+            <div class="stat-label">
+                Exited
+            </div>
 
         </div>
-
-
-        <div class="stat fps">
-
-            <span class="stat-label">
-                AI FPS
-            </span>
-
-            <span
-                id="fpsValue"
-                class="stat-value"
-            >
-                0
-            </span>
-
-        </div>
-
 
     </div>
 
 
-
-    <!-- =====================================================
-         CONTROLS
-    ====================================================== -->
+    <!-- CONTROLS -->
 
     <div class="controls">
 
@@ -959,10 +808,7 @@ body{
     </div>
 
 
-
-    <!-- =====================================================
-         EVENTS
-    ====================================================== -->
+    <!-- EVENTS -->
 
     <div class="events-panel">
 
@@ -973,7 +819,7 @@ body{
             </div>
 
             <div
-                id="eventsCount"
+                id="eventCount"
                 class="events-count"
             >
                 0 events
@@ -983,14 +829,12 @@ body{
 
 
         <div
-            id="eventsList"
-            class="events-list"
+            id="events"
+            class="events"
         >
 
-            <div class="empty-events">
-
+            <div class="no-events">
                 No crossing events yet
-
             </div>
 
         </div>
@@ -998,35 +842,36 @@ body{
     </div>
 
 
-
-    <!-- =====================================================
-         HINT
-    ====================================================== -->
+    <!-- HINT -->
 
     <div
         id="hint"
         class="hint"
     >
-        Rear camera is preferred automatically. Allow camera permission to begin live AI counting.
+        Rear camera is preferred by default.
+        Position the counting line where people should cross.
     </div>
-
 
 </div>
 
 
-
 <script>
 
-
 /* =========================================================
-   DOM
+   ELEMENTS
 ========================================================= */
 
-const video =
-    document.getElementById("video");
+const rawVideo =
+    document.getElementById("rawVideo");
 
 const processedFrame =
     document.getElementById("processedFrame");
+
+const cameraWrap =
+    document.getElementById("cameraWrap");
+
+const cameraPlaceholder =
+    document.getElementById("cameraPlaceholder");
 
 const startBtn =
     document.getElementById("startBtn");
@@ -1034,30 +879,23 @@ const startBtn =
 const flipBtn =
     document.getElementById("flipBtn");
 
-const statusEl =
-    document.getElementById("status");
+const boundaryLine =
+    document.getElementById("boundaryLine");
 
-const dot =
-    document.getElementById("dot");
+const statusText =
+    document.getElementById("statusText");
 
-const hint =
-    document.getElementById("hint");
+const statusDot =
+    document.getElementById("statusDot");
 
-const cameraBox =
-    document.getElementById("cameraBox");
+const liveDot =
+    document.getElementById("liveDot");
 
-const aiBadge =
-    document.getElementById("aiBadge");
+const liveText =
+    document.getElementById("liveText");
 
-const processingText =
-    document.getElementById("processingText");
-
-const fpsBadge =
-    document.getElementById("fpsBadge");
-
-
-const liveCount =
-    document.getElementById("liveCount");
+const currentCount =
+    document.getElementById("currentCount");
 
 const inCount =
     document.getElementById("inCount");
@@ -1065,15 +903,14 @@ const inCount =
 const outCount =
     document.getElementById("outCount");
 
-const fpsValue =
-    document.getElementById("fpsValue");
+const eventsContainer =
+    document.getElementById("events");
 
+const eventCount =
+    document.getElementById("eventCount");
 
-const eventsList =
-    document.getElementById("eventsList");
-
-const eventsCount =
-    document.getElementById("eventsCount");
+const hint =
+    document.getElementById("hint");
 
 
 /* =========================================================
@@ -1084,16 +921,29 @@ let stream = null;
 
 let ws = null;
 
-let timer = null;
+let sending = false;
+
+let running = false;
 
 let facing = "environment";
 
-let isStarting = false;
+let boundaryPercent = 50;
 
-let canvas =
+let frameTimer = null;
+
+let reconnectTimer = null;
+
+let events = [];
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
     document.createElement("canvas");
 
-let ctx =
+const ctx =
     canvas.getContext(
         "2d",
         {
@@ -1106,53 +956,39 @@ let ctx =
    STATUS
 ========================================================= */
 
-function setStatus(
-    text,
-    state = "idle"
-){
+function setStatus(text, state = "idle") {
 
-    statusEl.textContent =
-        text;
+    statusText.textContent = text;
 
+    statusDot.className = "dot";
 
-    dot.className =
-        "dot" +
-        (
-            state === "on"
-                ? " on"
-                : state === "error"
-                    ? " err"
-                    : ""
-        );
+    if (state === "on") {
+        statusDot.classList.add("on");
+    }
 
+    if (state === "error") {
+        statusDot.classList.add("error");
+    }
 
-    hint.classList.toggle(
-        "error",
-        state === "error"
-    );
 }
 
 
-function setAIActive(active){
+function setLive(active) {
 
-    if(active){
+    if (active) {
 
-        aiBadge.textContent =
-            "AI PROCESSING";
+        liveDot.classList.add("active");
 
-        aiBadge.classList.add(
-            "active"
-        );
+        liveText.textContent = "LIVE";
 
-    }else{
+    } else {
 
-        aiBadge.textContent =
-            "AI CONNECTING";
+        liveDot.classList.remove("active");
 
-        aiBadge.classList.remove(
-            "active"
-        );
+        liveText.textContent = "OFFLINE";
+
     }
+
 }
 
 
@@ -1160,7 +996,7 @@ function setAIActive(active){
    WEBSOCKET URL
 ========================================================= */
 
-function wsUrl(){
+function getWebSocketURL() {
 
     const protocol =
         location.protocol === "https:"
@@ -1170,30 +1006,34 @@ function wsUrl(){
     return (
         protocol +
         location.host +
-        "/phone-stream"
+        "/phone-stream?mode=phone"
     );
+
 }
 
 
 /* =========================================================
-   CAMERA SUPPORT
+   CAMERA CHECK
 ========================================================= */
 
-function isCameraAvailable(){
+function cameraSupported() {
 
     return !!(
         navigator.mediaDevices &&
         navigator.mediaDevices.getUserMedia
     );
+
 }
 
 
-function isSecureForCamera(){
+function secureContextAvailable() {
 
     return (
         window.isSecureContext ||
-        location.hostname === "localhost"
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1"
     );
+
 }
 
 
@@ -1201,47 +1041,45 @@ function isSecureForCamera(){
    OPEN CAMERA
 ========================================================= */
 
-async function openCamera(){
+async function openCamera() {
 
-    if(!isCameraAvailable()){
+    if (!cameraSupported()) {
 
         throw new Error(
-            "Camera API is not available in this browser."
+            "Camera access is not supported by this browser."
         );
+
     }
 
 
-    if(stream){
+    if (stream) {
 
         stream
             .getTracks()
-            .forEach(
-                track => track.stop()
-            );
+            .forEach(track => track.stop());
 
         stream = null;
+
     }
 
 
-    setStatus(
-        "Requesting camera"
-    );
+    setStatus("Requesting camera");
 
 
-    const preferred = {
+    const constraints = {
 
-        video:{
+        video: {
 
-            facingMode:{
-                ideal:facing
+            facingMode: {
+                ideal: facing
             },
 
-            width:{
+            width: {
                 ideal:1280,
                 max:1920
             },
 
-            height:{
+            height: {
                 ideal:720,
                 max:1080
             }
@@ -1249,77 +1087,64 @@ async function openCamera(){
         },
 
         audio:false
+
     };
 
 
-    try{
+    try {
 
         stream =
-            await navigator
-                .mediaDevices
-                .getUserMedia(
-                    preferred
-                );
+            await navigator.mediaDevices
+                .getUserMedia(constraints);
 
-    }catch(error){
+    }
+
+    catch (error) {
 
         /*
-         Desktop fallback.
-
-         Some webcams don't expose
-         facingMode.
+         Fallback for browsers/devices
+         that don't expose facingMode properly.
         */
 
         stream =
-            await navigator
-                .mediaDevices
+            await navigator.mediaDevices
                 .getUserMedia({
-
-                    video:{
-
-                        width:{
-                            ideal:1280
-                        },
-
-                        height:{
-                            ideal:720
-                        }
-
-                    },
-
+                    video:true,
                     audio:false
-
                 });
+
     }
 
 
-    video.srcObject =
-        stream;
+    rawVideo.srcObject = stream;
 
-
-    await video.play();
+    await rawVideo.play();
 
 
     const track =
-        stream
-            .getVideoTracks()[0];
-
+        stream.getVideoTracks()[0];
 
     const settings =
         track.getSettings();
 
 
-    if(settings.facingMode){
+    if (settings.facingMode) {
 
         facing =
             settings.facingMode;
+
     }
 
 
-    cameraBox.classList.toggle(
+    cameraWrap.classList.toggle(
         "front",
         facing === "user"
     );
+
+
+    cameraPlaceholder
+        .classList
+        .add("hidden");
 
 
     setStatus(
@@ -1327,9 +1152,6 @@ async function openCamera(){
         "on"
     );
 
-
-    startBtn.textContent =
-        "■ Stop Camera";
 }
 
 
@@ -1337,226 +1159,128 @@ async function openCamera(){
    CONNECT WEBSOCKET
 ========================================================= */
 
-function connectStream(){
+function connectWebSocket() {
 
     return new Promise(
-        (resolve,reject) => {
+        (resolve, reject) => {
 
-            let resolved = false;
+            let connected = false;
 
-            try{
+
+            try {
 
                 ws =
                     new WebSocket(
-                        wsUrl()
+                        getWebSocketURL()
                     );
 
+            }
 
-                ws.binaryType =
-                    "arraybuffer";
-
-
-                ws.onopen =
-                    () => {
-
-                        resolved = true;
-
-                        setStatus(
-                            "AI connected",
-                            "on"
-                        );
-
-
-                        processingText.textContent =
-                            "Streaming frames to AI...";
-
-
-                        resolve();
-                    };
-
-
-                /* ---------------------------------------------
-                   RECEIVE SERVER RESULTS
-                --------------------------------------------- */
-
-                ws.onmessage =
-                    (event) => {
-
-                        try{
-
-                            const data =
-                                JSON.parse(
-                                    event.data
-                                );
-
-
-                            /* STATUS */
-
-                            if(
-                                data.type === "status"
-                            ){
-
-                                if(
-                                    data.status === "connected"
-                                ){
-
-                                    setStatus(
-                                        "Live AI connected",
-                                        "on"
-                                    );
-
-                                    processingText.textContent =
-                                        "Waiting for detection...";
-                                }
-
-                                return;
-                            }
-
-
-                            /* CONFIG */
-
-                            if(
-                                data.type === "config_updated"
-                            ){
-
-                                if(data.stats){
-
-                                    updateStats(
-                                        data.stats
-                                    );
-                                }
-
-                                return;
-                            }
-
-
-                            /* ERROR */
-
-                            if(
-                                data.type === "error"
-                            ){
-
-                                console.error(
-                                    "Server error:",
-                                    data.message
-                                );
-
-                                setStatus(
-                                    "Processing error",
-                                    "error"
-                                );
-
-                                processingText.textContent =
-                                    data.message ||
-                                    "AI processing error";
-
-                                return;
-                            }
-
-
-                            /* ---------------------------------
-                               PROCESSED FRAME
-                            ---------------------------------- */
-
-                            if(
-                                data.type === "frame"
-                            ){
-
-                                if(data.image){
-
-                                    processedFrame.src =
-                                        "data:image/jpeg;base64," +
-                                        data.image;
-
-
-                                    processedFrame.style.display =
-                                        "block";
-
-
-                                    setAIActive(
-                                        true
-                                    );
-
-
-                                    processingText.textContent =
-                                        "Person detection & tracking active";
-                                }
-
-
-                                if(data.stats){
-
-                                    updateStats(
-                                        data.stats
-                                    );
-                                }
-
-
-                                if(
-                                    Array.isArray(
-                                        data.events
-                                    )
-                                ){
-
-                                    updateEvents(
-                                        data.events
-                                    );
-                                }
-
-                            }
-
-
-                        }catch(error){
-
-                            console.error(
-                                "Invalid server message:",
-                                error
-                            );
-                        }
-                    };
-
-
-                ws.onerror =
-                    () => {
-
-                        if(!resolved){
-
-                            reject(
-                                new Error(
-                                    "Could not connect to the AI server."
-                                )
-                            );
-                        }
-                    };
-
-
-                ws.onclose =
-                    () => {
-
-                        setAIActive(
-                            false
-                        );
-
-
-                        if(stream){
-
-                            setStatus(
-                                "AI stream disconnected",
-                                "error"
-                            );
-
-                            processingText.textContent =
-                                "Connection closed";
-                        }
-                    };
-
-
-            }catch(error){
+            catch (error) {
 
                 reject(error);
+                return;
+
             }
+
+
+            ws.binaryType = "blob";
+
+
+            ws.onopen = () => {
+
+                connected = true;
+
+                setStatus(
+                    "AI connected",
+                    "on"
+                );
+
+                setLive(true);
+
+                resolve();
+
+            };
+
+
+            ws.onerror = () => {
+
+                if (!connected) {
+
+                    reject(
+                        new Error(
+                            "Unable to connect to AI processing server."
+                        )
+                    );
+
+                }
+
+            };
+
+
+            ws.onclose = () => {
+
+                setLive(false);
+
+                if (running) {
+
+                    setStatus(
+                        "Reconnecting...",
+                        "error"
+                    );
+
+                    scheduleReconnect();
+
+                }
+
+            };
+
+
+            ws.onmessage =
+                handleServerMessage;
 
         }
     );
+
+}
+
+
+/* =========================================================
+   RECONNECT
+========================================================= */
+
+function scheduleReconnect() {
+
+    clearTimeout(reconnectTimer);
+
+    reconnectTimer =
+        setTimeout(
+            async () => {
+
+                if (
+                    running &&
+                    (!ws ||
+                    ws.readyState !== WebSocket.OPEN)
+                ) {
+
+                    try {
+
+                        await connectWebSocket();
+
+                    }
+
+                    catch (error) {
+
+                        scheduleReconnect();
+
+                    }
+
+                }
+
+            },
+            2000
+        );
+
 }
 
 
@@ -1564,61 +1288,51 @@ function connectStream(){
    SEND CAMERA FRAME
 ========================================================= */
 
-function sendFrame(){
+function sendFrame() {
 
-    if(
-        !stream ||
-        !ws ||
+    if (!running) return;
+
+    if (sending) return;
+
+    if (!stream) return;
+
+    if (!ws) return;
+
+    if (
         ws.readyState !== WebSocket.OPEN
-    ){
-        return;
-    }
+    ) return;
 
+    if (
+        rawVideo.readyState < 2
+    ) return;
 
-    if(video.readyState < 2){
-        return;
-    }
-
-
-    if(
-        !video.videoWidth ||
-        !video.videoHeight
-    ){
-        return;
-    }
+    if (
+        !rawVideo.videoWidth ||
+        !rawVideo.videoHeight
+    ) return;
 
 
     /*
-     Prevent WebSocket backlog.
-
-     If server/network is busy,
-     skip this frame.
-
-     Real-time systems should
-     process the latest frame,
-     not queue old frames.
+      Prevent browser memory buildup
+      if backend is processing slower.
     */
 
-    if(
-        ws.bufferedAmount > 500000
-    ){
+    if (ws.bufferedAmount > 600000) {
+
         return;
+
     }
 
 
-    /*
-     Keep frame small enough for
-     real-time inference.
-    */
+    sending = true;
+
 
     const maxWidth = 640;
-
 
     const scale =
         Math.min(
             1,
-            maxWidth /
-            video.videoWidth
+            maxWidth / rawVideo.videoWidth
         );
 
 
@@ -1626,8 +1340,7 @@ function sendFrame(){
         Math.max(
             2,
             Math.round(
-                video.videoWidth *
-                scale
+                rawVideo.videoWidth * scale
             )
         );
 
@@ -1636,14 +1349,13 @@ function sendFrame(){
         Math.max(
             2,
             Math.round(
-                video.videoHeight *
-                scale
+                rawVideo.videoHeight * scale
             )
         );
 
 
     ctx.drawImage(
-        video,
+        rawVideo,
         0,
         0,
         canvas.width,
@@ -1653,18 +1365,36 @@ function sendFrame(){
 
     canvas.toBlob(
 
-        (blob) => {
+        blob => {
 
-            if(
-                blob &&
-                ws &&
-                ws.readyState === WebSocket.OPEN &&
-                ws.bufferedAmount < 500000
-            ){
+            try {
 
-                ws.send(
-                    blob
+                if (
+                    blob &&
+                    ws &&
+                    ws.readyState === WebSocket.OPEN &&
+                    ws.bufferedAmount < 600000
+                ) {
+
+                    ws.send(blob);
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Frame send error:",
+                    error
                 );
+
+            }
+
+            finally {
+
+                sending = false;
+
             }
 
         },
@@ -1672,7 +1402,214 @@ function sendFrame(){
         "image/jpeg",
 
         0.72
+
     );
+
+}
+
+
+/* =========================================================
+   HANDLE BACKEND RESPONSE
+========================================================= */
+
+function handleServerMessage(event) {
+
+    /*
+      Backend can return JSON.
+    */
+
+    if (typeof event.data === "string") {
+
+        try {
+
+            const data =
+                JSON.parse(event.data);
+
+
+            /* ---------- ERROR ---------- */
+
+            if (data.error) {
+
+                setStatus(
+                    data.error,
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            /* ---------- PROCESSED FRAME ---------- */
+
+            if (data.frame) {
+
+                showProcessedFrame(
+                    data.frame
+                );
+
+            }
+
+
+            /*
+              Support alternate backend names
+            */
+
+            if (data.image) {
+
+                showProcessedFrame(
+                    data.image
+                );
+
+            }
+
+
+            if (data.frame_base64) {
+
+                showProcessedFrame(
+                    data.frame_base64
+                );
+
+            }
+
+
+            /* ---------- STATS ---------- */
+
+            updateStats(data);
+
+
+            /* ---------- EVENTS ---------- */
+
+            if (data.event) {
+
+                addEvent(
+                    data.event
+                );
+
+            }
+
+
+            if (
+                Array.isArray(data.events)
+            ) {
+
+                data.events.forEach(
+                    eventItem => {
+
+                        addEvent(
+                            eventItem
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* ---------- BOUNDARY ---------- */
+
+            if (
+                data.boundary_y !== undefined
+            ) {
+
+                updateBoundaryFromServer(
+                    data.boundary_y
+                );
+
+            }
+
+
+            if (
+                data.boundary_percent !== undefined
+            ) {
+
+                setBoundaryPercent(
+                    data.boundary_percent,
+                    false
+                );
+
+            }
+
+
+        }
+
+        catch (error) {
+
+            console.warn(
+                "Invalid server message",
+                error
+            );
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+      If backend sends binary image directly.
+    */
+
+    if (
+        event.data instanceof Blob
+    ) {
+
+        const url =
+            URL.createObjectURL(
+                event.data
+            );
+
+
+        processedFrame.onload =
+            () => {
+
+                URL.revokeObjectURL(url);
+
+            };
+
+
+        processedFrame.src = url;
+
+        cameraWrap.classList.add(
+            "processed"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DISPLAY PROCESSED FRAME
+========================================================= */
+
+function showProcessedFrame(frameData) {
+
+    if (!frameData) return;
+
+
+    let source = frameData;
+
+
+    if (
+        !source.startsWith("data:image")
+    ) {
+
+        source =
+            "data:image/jpeg;base64," +
+            source;
+
+    }
+
+
+    processedFrame.src = source;
+
+
+    cameraWrap.classList.add(
+        "processed"
+    );
+
 }
 
 
@@ -1680,82 +1617,194 @@ function sendFrame(){
    UPDATE STATS
 ========================================================= */
 
-function updateStats(stats){
+function updateStats(data) {
 
     /*
-     Supports slightly different
-     backend naming safely.
+      Multiple field names supported
+      so frontend is tolerant of backend.
     */
 
-
-    const live =
-        stats.live_count ??
-        stats.current_count ??
-        stats.total_count ??
-        stats.occupancy ??
-        0;
+    const current =
+        data.current ??
+        data.current_count ??
+        data.zone_count ??
+        data.people ??
+        data.count;
 
 
     const entered =
-        stats.in_count ??
-        stats.entered ??
-        stats.total_in ??
-        0;
+        data.in_count ??
+        data.total_in ??
+        data.entered;
 
 
     const exited =
-        stats.out_count ??
-        stats.exited ??
-        stats.total_out ??
-        0;
+        data.out_count ??
+        data.total_out ??
+        data.exited;
 
 
-    const fps =
-        stats.fps ??
-        stats.processing_fps ??
-        0;
+    if (
+        current !== undefined
+    ) {
+
+        currentCount.textContent =
+            current;
+
+    }
 
 
-    liveCount.textContent =
-        live;
+    if (
+        entered !== undefined
+    ) {
+
+        inCount.textContent =
+            entered;
+
+    }
 
 
-    inCount.textContent =
-        entered;
+    if (
+        exited !== undefined
+    ) {
 
+        outCount.textContent =
+            exited;
 
-    outCount.textContent =
-        exited;
+    }
 
-
-    const formattedFPS =
-        Number(fps || 0)
-            .toFixed(1);
-
-
-    fpsValue.textContent =
-        formattedFPS;
-
-
-    fpsBadge.textContent =
-        formattedFPS +
-        " FPS";
 }
 
 
 /* =========================================================
-   UPDATE EVENTS
+   EVENTS
 ========================================================= */
 
-function updateEvents(events){
+function addEvent(eventData) {
 
-    if(!Array.isArray(events)){
+    let direction;
+    let timestamp;
 
-        return;
+
+    if (
+        typeof eventData === "string"
+    ) {
+
+        direction =
+            eventData.toUpperCase();
+
+        timestamp =
+            new Date()
+                .toLocaleTimeString(
+                    [],
+                    {
+                        hour:"2-digit",
+                        minute:"2-digit",
+                        second:"2-digit"
+                    }
+                );
+
+    }
+
+    else {
+
+        direction =
+            (
+                eventData.direction ||
+                eventData.type ||
+                eventData.event ||
+                ""
+            )
+            .toString()
+            .toUpperCase();
+
+
+        timestamp =
+            eventData.time ||
+            eventData.timestamp ||
+            new Date()
+                .toLocaleTimeString(
+                    [],
+                    {
+                        hour:"2-digit",
+                        minute:"2-digit",
+                        second:"2-digit"
+                    }
+                );
+
     }
 
 
-    eventsCount.textContent =
+    if (
+        direction !== "IN" &&
+        direction !== "OUT" &&
+        direction !== "ENTERED" &&
+        direction !== "EXITED"
+    ) {
+
+        return;
+
+    }
+
+
+    const normalizedDirection =
+        (
+            direction === "IN" ||
+            direction === "ENTERED"
+        )
+        ? "IN"
+        : "OUT";
+
+
+    const key =
+        normalizedDirection +
+        "_" +
+        timestamp;
+
+
+    /*
+      Avoid duplicate event rendering.
+    */
+
+    if (
+        events.some(
+            item => item.key === key
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    events.unshift({
+
+        key,
+        direction:normalizedDirection,
+        time:timestamp
+
+    });
+
+
+    /*
+      Keep recent events limited.
+    */
+
+    events =
+        events.slice(0, 20);
+
+
+    renderEvents();
+
+}
+
+
+function renderEvents() {
+
+    eventsContainer.innerHTML = "";
+
+
+    eventCount.textContent =
         events.length +
         (
             events.length === 1
@@ -1764,246 +1813,415 @@ function updateEvents(events){
         );
 
 
-    if(events.length === 0){
+    if (!events.length) {
 
-        eventsList.innerHTML =
-            `
-            <div class="empty-events">
+        eventsContainer.innerHTML = `
+            <div class="no-events">
                 No crossing events yet
             </div>
-            `;
+        `;
 
         return;
+
     }
 
 
-    /*
-     Show newest first.
+    events.forEach(item => {
 
-     Limit UI to avoid huge DOM.
-    */
+        const eventElement =
+            document.createElement("div");
 
-    const latest =
-        [...events]
-            .reverse()
-            .slice(0,20);
+        eventElement.className =
+            "event";
 
 
-    eventsList.innerHTML =
-        latest
-            .map(
-                event => {
+        const type =
+            document.createElement("div");
 
-                    const direction =
-                        String(
-                            event.direction ||
-                            event.type ||
-                            event.event ||
-                            ""
-                        ).toUpperCase();
+        type.className =
+            "event-type";
 
 
-                    const isIn =
-                        direction.includes("IN") ||
-                        direction.includes("ENTER");
+        const directionDot =
+            document.createElement("span");
+
+        directionDot.className =
+            "event-direction " +
+            (
+                item.direction === "IN"
+                    ? "in"
+                    : "out"
+            );
 
 
-                    const label =
-                        isIn
-                            ? "Entered"
-                            : "Exited";
+        const directionText =
+            document.createElement("span");
+
+        directionText.textContent =
+            item.direction === "IN"
+                ? "Person Entered"
+                : "Person Exited";
 
 
-                    const trackId =
-                        event.track_id ??
-                        event.id ??
-                        event.person_id ??
-                        "—";
+        type.appendChild(directionDot);
+
+        type.appendChild(directionText);
 
 
-                    const time =
-                        formatEventTime(
-                            event.timestamp ||
-                            event.time ||
-                            event.created_at
-                        );
+        const time =
+            document.createElement("div");
+
+        time.className =
+            "event-time";
+
+        time.textContent =
+            item.time;
 
 
-                    return `
+        eventElement.appendChild(type);
 
-                        <div class="event">
+        eventElement.appendChild(time);
 
-                            <div class="event-left">
 
-                                <span
-                                    class="event-type ${
-                                        isIn
-                                            ? "in"
-                                            : "out"
-                                    }"
-                                ></span>
+        eventsContainer.appendChild(
+            eventElement
+        );
 
-                                <span>
-                                    Person #${trackId}
-                                    · ${label}
-                                </span>
+    });
 
-                            </div>
-
-                            <span class="event-time">
-                                ${time}
-                            </span>
-
-                        </div>
-
-                    `;
-
-                }
-            )
-            .join("");
 }
 
 
 /* =========================================================
-   FORMAT EVENT TIME
+   BOUNDARY LINE
 ========================================================= */
 
-function formatEventTime(value){
+function setBoundaryPercent(
+    percent,
+    sendToServer = true
+) {
 
-    if(!value){
+    percent =
+        Math.max(
+            5,
+            Math.min(
+                95,
+                Number(percent)
+            )
+        );
 
-        return "Just now";
+
+    boundaryPercent =
+        percent;
+
+
+    boundaryLine.style.top =
+        percent + "%";
+
+
+    if (sendToServer) {
+
+        sendBoundary();
+
+    }
+
+}
+
+
+function updateBoundaryFromServer(value) {
+
+    /*
+      If backend gives percentage directly.
+    */
+
+    if (
+        value >= 0 &&
+        value <= 100
+    ) {
+
+        setBoundaryPercent(
+            value,
+            false
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SEND BOUNDARY
+========================================================= */
+
+function sendBoundary() {
+
+    if (
+        !ws ||
+        ws.readyState !== WebSocket.OPEN
+    ) {
+
+        return;
+
     }
 
 
-    try{
+    try {
 
-        if(
-            typeof value === "number"
-        ){
+        ws.send(
+            JSON.stringify({
 
-            const date =
-                new Date(
-                    value < 100000000000
-                        ? value * 1000
-                        : value
-                );
+                action:"set_boundary",
+
+                boundary_percent:
+                    boundaryPercent,
+
+                boundary_y:
+                    boundaryPercent
+
+            })
+        );
+
+    }
+
+    catch (error) {
+
+        console.warn(
+            "Boundary update failed"
+        );
+
+    }
+
+}
 
 
-            return date.toLocaleTimeString(
-                [],
-                {
-                    hour:"2-digit",
-                    minute:"2-digit",
-                    second:"2-digit"
-                }
+/* =========================================================
+   DRAG BOUNDARY
+========================================================= */
+
+let draggingBoundary = false;
+
+
+function moveBoundary(event) {
+
+    if (!draggingBoundary) return;
+
+
+    event.preventDefault();
+
+
+    const rect =
+        cameraWrap.getBoundingClientRect();
+
+
+    let clientY;
+
+
+    if (
+        event.touches &&
+        event.touches.length
+    ) {
+
+        clientY =
+            event.touches[0].clientY;
+
+    }
+
+    else {
+
+        clientY =
+            event.clientY;
+
+    }
+
+
+    const relativeY =
+        clientY - rect.top;
+
+
+    const percent =
+        (
+            relativeY /
+            rect.height
+        ) * 100;
+
+
+    setBoundaryPercent(
+        percent,
+        true
+    );
+
+}
+
+
+boundaryLine.addEventListener(
+    "pointerdown",
+
+    event => {
+
+        draggingBoundary = true;
+
+        boundaryLine.setPointerCapture(
+            event.pointerId
+        );
+
+        moveBoundary(event);
+
+    }
+);
+
+
+boundaryLine.addEventListener(
+    "pointermove",
+    moveBoundary
+);
+
+
+boundaryLine.addEventListener(
+    "pointerup",
+
+    event => {
+
+        draggingBoundary = false;
+
+        try {
+
+            boundaryLine.releasePointerCapture(
+                event.pointerId
             );
+
         }
 
+        catch (error) {}
 
-        return String(value);
-
-    }catch(error){
-
-        return "Just now";
     }
-}
+);
+
+
+boundaryLine.addEventListener(
+    "pointercancel",
+
+    () => {
+
+        draggingBoundary = false;
+
+    }
+);
 
 
 /* =========================================================
    START
 ========================================================= */
 
-async function start(){
+async function startCamera() {
 
-    if(isStarting){
-        return;
-    }
+    if (running) return;
 
 
-    isStarting = true;
+    try {
 
-
-    try{
-
-        if(
-            !isSecureForCamera()
-        ){
+        if (
+            !secureContextAvailable()
+        ) {
 
             throw new Error(
                 "Camera access requires a secure HTTPS connection."
             );
+
         }
 
 
-        startBtn.disabled =
-            true;
+        if (
+            !cameraSupported()
+        ) {
 
+            throw new Error(
+                "This browser does not support camera access."
+            );
+
+        }
+
+
+        startBtn.disabled = true;
 
         startBtn.textContent =
             "Starting...";
 
 
-        setStatus(
-            "Opening camera"
+        hint.classList.remove(
+            "error"
         );
-
-
-        setAIActive(
-            false
-        );
-
-
-        processedFrame.style.display =
-            "none";
 
 
         await openCamera();
 
 
-        await connectStream();
+        await connectWebSocket();
 
 
-        clearInterval(
-            timer
-        );
+        running = true;
 
 
         /*
-         10 FPS sending rate.
-
-         Server processes the newest
-         available frame.
+          ~12 FPS.
+          Keeps mobile streaming responsive
+          without overloading Render.
         */
 
-        timer =
+        clearInterval(frameTimer);
+
+
+        frameTimer =
             setInterval(
                 sendFrame,
-                100
+                85
             );
+
+
+        startBtn.textContent =
+            "■ Stop Camera";
+
+
+        startBtn.disabled = false;
 
 
         hint.textContent =
             facing === "environment"
-                ? "Rear camera is active. Live frames are being processed by Vision Counter."
-                : "Front camera is active. Live frames are being processed by Vision Counter.";
+                ? "Rear camera is active. Drag the yellow line to set the counting boundary."
+                : "Front camera is active. Drag the yellow line to set the counting boundary.";
 
 
-        processingText.textContent =
-            "Live stream active";
+        setLive(true);
 
 
-        setStatus(
-            "Live processing",
-            "on"
+        /*
+          Send current boundary after connection.
+        */
+
+        setTimeout(
+            sendBoundary,
+            300
         );
 
+    }
 
-    }catch(error){
+    catch (error) {
 
         console.error(
+            "Camera start error:",
             error
         );
+
+
+        running = false;
+
+
+        startBtn.disabled = false;
+
+        startBtn.textContent =
+            "▶ Start Camera";
+
+
+        setLive(false);
 
 
         setStatus(
@@ -2012,46 +2230,41 @@ async function start(){
         );
 
 
-        setAIActive(
-            false
+        hint.classList.add(
+            "error"
         );
 
 
-        if(
+        if (
             error.name ===
             "NotAllowedError"
-        ){
+        ) {
 
             hint.textContent =
-                "Camera permission was denied. Allow camera access in your browser settings and try again.";
+                "Camera permission was denied. Allow camera access in your browser settings.";
 
-        }else if(
+        }
+
+        else if (
             error.name ===
             "NotFoundError"
-        ){
+        ) {
 
             hint.textContent =
                 "No compatible camera was found on this device.";
 
-        }else{
+        }
+
+        else {
 
             hint.textContent =
                 error.message ||
                 "Unable to start the camera.";
+
         }
 
-
-        startBtn.textContent =
-            "▶ Start Camera";
-
-    }finally{
-
-        startBtn.disabled =
-            false;
-
-        isStarting =
-            false;
     }
+
 }
 
 
@@ -2059,49 +2272,58 @@ async function start(){
    STOP
 ========================================================= */
 
-function stop(){
+function stopCamera() {
 
-    clearInterval(
-        timer
-    );
+    running = false;
 
 
-    timer =
-        null;
+    clearInterval(frameTimer);
+
+    frameTimer = null;
 
 
-    if(ws){
+    clearTimeout(reconnectTimer);
 
-        try{
 
-            if(
-                ws.readyState ===
-                WebSocket.OPEN
-            ){
+    sending = false;
+
+
+    if (ws) {
+
+        try {
+
+            if (
+                ws.readyState === WebSocket.OPEN
+            ) {
 
                 ws.send(
                     JSON.stringify({
                         action:"stop"
                     })
                 );
+
             }
 
-        }catch(error){}
+        }
+
+        catch (error) {}
 
 
-        try{
+        try {
 
             ws.close();
 
-        }catch(error){}
+        }
+
+        catch (error) {}
 
 
-        ws =
-            null;
+        ws = null;
+
     }
 
 
-    if(stream){
+    if (stream) {
 
         stream
             .getTracks()
@@ -2109,14 +2331,12 @@ function stop(){
                 track => track.stop()
             );
 
+        stream = null;
 
-        stream =
-            null;
     }
 
 
-    video.srcObject =
-        null;
+    rawVideo.srcObject = null;
 
 
     processedFrame.removeAttribute(
@@ -2124,21 +2344,23 @@ function stop(){
     );
 
 
-    processedFrame.style.display =
-        "none";
-
-
-    setAIActive(
-        false
+    cameraWrap.classList.remove(
+        "processed"
     );
 
 
-    processingText.textContent =
-        "Camera stopped";
+    cameraPlaceholder
+        .classList
+        .remove("hidden");
 
 
-    fpsBadge.textContent =
-        "0 FPS";
+    startBtn.disabled = false;
+
+    startBtn.textContent =
+        "▶ Start Camera";
+
+
+    setLive(false);
 
 
     setStatus(
@@ -2146,12 +2368,14 @@ function stop(){
     );
 
 
+    hint.classList.remove(
+        "error"
+    );
+
+
     hint.textContent =
-        "Tap Start Camera to begin live AI counting.";
+        "Tap Start Camera to begin live person detection.";
 
-
-    startBtn.textContent =
-        "▶ Start Camera";
 }
 
 
@@ -2161,15 +2385,19 @@ function stop(){
 
 startBtn.addEventListener(
     "click",
+
     () => {
 
-        if(stream){
+        if (running) {
 
-            stop();
+            stopCamera();
 
-        }else{
+        }
 
-            start();
+        else {
+
+            startCamera();
+
         }
 
     }
@@ -2191,67 +2419,76 @@ flipBtn.addEventListener(
                 : "environment";
 
 
-        /*
-         If camera is running,
-         reopen camera with the
-         selected facing mode.
-        */
-
-        if(stream){
-
-            try{
-
-                /*
-                 Stop old tracks.
-                */
-
-                stream
-                    .getTracks()
-                    .forEach(
-                        track =>
-                            track.stop()
-                    );
-
-
-                stream =
-                    null;
-
-
-                await openCamera();
-
-
-                hint.textContent =
-                    facing === "environment"
-                        ? "Rear camera active."
-                        : "Front camera active.";
-
-
-            }catch(error){
-
-                console.error(
-                    error
-                );
-
-
-                setStatus(
-                    "Could not switch camera",
-                    "error"
-                );
-
-
-                hint.textContent =
-                    "Unable to switch camera on this device.";
-            }
-
-        }else{
+        if (!running) {
 
             hint.textContent =
                 facing === "environment"
                     ? "Rear camera selected. Tap Start Camera."
                     : "Front camera selected. Tap Start Camera.";
+
+            return;
+
+        }
+
+
+        try {
+
+            /*
+              Stop current physical camera,
+              then open the other one.
+            */
+
+            await openCamera();
+
+
+            cameraWrap.classList.toggle(
+                "front",
+                facing === "user"
+            );
+
+
+            hint.textContent =
+                facing === "environment"
+                    ? "Rear camera active."
+                    : "Front camera active.";
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Camera flip error:",
+                error
+            );
+
+
+            setStatus(
+                "Camera switch failed",
+                "error"
+            );
+
+
+            hint.classList.add(
+                "error"
+            );
+
+
+            hint.textContent =
+                "Unable to switch cameras on this device.";
+
         }
 
     }
+);
+
+
+/* =========================================================
+   INITIAL BOUNDARY
+========================================================= */
+
+setBoundaryPercent(
+    50,
+    false
 );
 
 
@@ -2264,12 +2501,40 @@ window.addEventListener(
 
     () => {
 
-        if(
-            !isCameraAvailable()
-        ){
+        if (
+            !secureContextAvailable()
+        ) {
+
+            setStatus(
+                "Secure connection required",
+                "error"
+            );
+
+
+            hint.classList.add(
+                "error"
+            );
+
+
+            hint.textContent =
+                "Camera access requires HTTPS.";
+
+            return;
+
+        }
+
+
+        if (
+            !cameraSupported()
+        ) {
 
             setStatus(
                 "Camera unavailable",
+                "error"
+            );
+
+
+            hint.classList.add(
                 "error"
             );
 
@@ -2278,33 +2543,14 @@ window.addEventListener(
                 "This browser does not provide camera access.";
 
             return;
-        }
 
-
-        if(
-            !isSecureForCamera()
-        ){
-
-            setStatus(
-                "Secure connection required",
-                "error"
-            );
-
-
-            hint.textContent =
-                "Open this page through your deployed HTTPS project URL.";
-
-            return;
         }
 
 
         setStatus(
-            "Ready to start"
+            "Ready"
         );
 
-
-        hint.textContent =
-            "Rear camera is preferred automatically. Tap Start Camera to begin.";
     }
 );
 
@@ -2315,13 +2561,12 @@ window.addEventListener(
 
 window.addEventListener(
     "beforeunload",
-    stop
+    stopCamera
 );
-
 
 window.addEventListener(
     "pagehide",
-    stop
+    stopCamera
 );
 
 </script>
